@@ -17,9 +17,7 @@ setup(
   packages=find_packages(where='src'),
   python_requires='>=3.9',
   install_requires=['qiskit'],
-  entry_points={
-    'console_scripts': [
-      'abrax = abrax.__main__:main'
-    ]
-  }
+  extras_require={
+    'dev': ['pytest', 'twine', 'wheel'],
+  },
 )
