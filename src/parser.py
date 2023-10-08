@@ -29,16 +29,6 @@ def resolve_circuit(circuit, name):
   qc.measure_all()
   return qc
 
-test="""
-// I AM JESUS
-// SPACES ARE SIGNIFICANT, DONOT add them inside a gate
-- H CX(4) RX(10)
-- H -    -
-- H -    CX(4)
-- H X    RY(55)
-- H -    -
-"""
-
 def A(stri, name="circuit"):
   circuit = parse_circuit(stri)
   return resolve_circuit(circuit, name)

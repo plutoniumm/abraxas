@@ -1,17 +1,17 @@
-# setup.py for abraxas
+# setup.py for abrax
 from setuptools import setup, find_packages
 
 with open('README.md', 'r') as fh:
   long_description = fh.read()
 
 setup(
-  name='abraxas',
+  name='abrax',
   version='0.0.1',
   description='A Quantum Circuit DSL',
   long_description=long_description,
   long_description_content_type='text/markdown',
   author='plutoniumm',
-  url="https://github.com/plutoniumm/abraxas",
+  url="https://github.com/plutoniumm/abrax",
   license='MIT',
   package_dir={'': 'src'},
   packages=find_packages(where='src'),
@@ -19,7 +19,7 @@ setup(
   install_requires=['qiskit'],
   entry_points={
     'console_scripts': [
-      'abraxas = abraxas.__main__:main'
+      'abrax = abrax.__main__:main'
     ]
   }
 )

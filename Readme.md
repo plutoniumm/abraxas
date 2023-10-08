@@ -1,11 +1,11 @@
-## Abraxas
+## abraxas
 
 A tiny DSL to compile to qiskit circuits. The goal is to speed up the time it takes to write small stupid circuits. Anything beyond a certain complexity should be written in qiskit directly.
 
 ### Example
 
 ```python
-from abraxas import A
+from abrax import A
 
 # Create a circuit
 circuit = A("""
