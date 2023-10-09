@@ -1,5 +1,3 @@
-from qiskit import QuantumCircuit
-
 def parse_circuit(string):
   lines = string.strip().split("\n")
   lines = [e.strip() for e in lines if not e.startswith("//")]
@@ -7,9 +5,7 @@ def parse_circuit(string):
   by_rows = [list(filter(None, e.split(" "))) for e in lines]
   return list(map(list, zip(*by_rows)))
 
-def resolve_circuit(circuit, name):
-  qc = QuantumCircuit(len(circuit[0]), name=name)
-
+def resolve_circuit(circuit, qc, name):
   for wireNo, wire in enumerate(circuit):
     for gateNo, gate in enumerate(wire):
       if gate == "-":
@@ -29,6 +25,6 @@ def resolve_circuit(circuit, name):
   qc.measure_all()
   return qc
 
-def A(stri, name="circuit"):
+def A(stri, qc, name="circuit"):
   circuit = parse_circuit(stri)
-  return resolve_circuit(circuit, name)
+  return resolve_circuit(circuit, qc, name)

@@ -15,7 +15,7 @@ setup(
   package_dir={'': 'src'},
   packages=find_packages(where='src'),
   python_requires='>=3.9',
-  install_requires=['qiskit'],
+  install_requires=[],
   extras_require={
     'dev': ['pytest', 'twine', 'wheel'],
   },
