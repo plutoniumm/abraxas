@@ -73,5 +73,5 @@ config={
 ```
 
 | Key | Type (Default) | Description |
-| --- | --- | --- | --- |
+| --- | --- | --- |
 | `measure` | `bool` (`True`) | Whether to measure all qubits at the end of the circuit |
