@@ -13,7 +13,7 @@ def parse_circuit(string):
   by_rows = [list(filter(None, e.split(" "))) for e in cleaned]
   return list(map(list, zip(*by_rows)))
 
-def resolve_circuit(circuit, qc):
+def resolve_circuit(circuit, qc, config):
   for layerNo, layer in enumerate(circuit):
     if all([e.lower() == "-" for e in layer]):
       continue
@@ -38,9 +38,13 @@ def resolve_circuit(circuit, qc):
 
       op(*param)
 
-  qc.measure_all()
+  if config['measure']:
+    qc.measure_all()
   return qc
 
-def A(stri, qc):
+default = {
+  'measure': True,
+}
+def A(stri, qc, config=default):
   circuit = parse_circuit(stri)
-  return resolve_circuit(circuit, qc)
+  return resolve_circuit(circuit, qc, config)
