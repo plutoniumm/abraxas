@@ -1,6 +1,6 @@
-import re
+from re import compile
 
-no_gate=re.compile("-{1,}")
+no_gate = compile("-{1,}")
 
 def parse_circuit(string):
   lines = map(lambda e: e.strip(), string.strip().split("\n"))
@@ -25,6 +25,14 @@ def parse_circuit(string):
 
   return list(map(list, zip(*by_rows)))
 
+def parse_param(p):
+  # if float or int continue
+  if isinstance(p, (float, int)):
+    return p
+  # if not, it's a string, if includes . it's a float
+  p = p.strip()
+  return float(p) if "." in p else int(p)
+
 def resolve_circuit(circuit, qc, config):
   for layerNo, layer in enumerate(circuit):
     if all([e.lower() == "-" for e in layer]):
@@ -40,10 +48,14 @@ def resolve_circuit(circuit, qc, config):
         gate_name = gate[:gate.index("(")]
         param = gate[gate.index("(") + 1:gate.index(")")]
         op = getattr(qc, gate_name)
+
         if "," in param:
-          param = list(map(float, param.split(","))) + [wireNo]
+          param = param \
+            .split(",") \
+            .map(lambda e: parse_param(e))
+          param = param + [wireNo]
         else:
-          param = [float(param), wireNo]
+          param = [parse_param(param), wireNo]
       else:
         param = [wireNo]
         op = getattr(qc, gate)
