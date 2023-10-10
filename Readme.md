@@ -9,7 +9,7 @@ A tiny DSL to compile to qiskit circuits. The goal is to speed up the time it ta
 ### Install
 While not specified here you will need Qiskit since Abraxas takes in an initialized `QuantumCircuit` object to write to.
 ```py
-pip install abraxas
+pip install abrax
 ```
 
 ### Examples
