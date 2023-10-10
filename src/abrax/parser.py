@@ -1,3 +1,7 @@
+import re
+
+no_gate=re.compile("-{1,}")
+
 def parse_circuit(string):
   lines = map(lambda e: e.strip(), string.strip().split("\n"))
   cleaned =[]
@@ -11,6 +15,14 @@ def parse_circuit(string):
       cleaned.append(line)
 
   by_rows = [list(filter(None, e.split(" "))) for e in cleaned]
+
+  # sanity checks
+  # check if all rows have the same length
+  l = by_rows[0]
+  for idx, row in enumerate(by_rows):
+    if len(row) != len(l):
+      raise Exception(f"Row {idx} has a different length than row {idx-1}")
+
   return list(map(list, zip(*by_rows)))
 
 def resolve_circuit(circuit, qc, config):
@@ -21,7 +33,7 @@ def resolve_circuit(circuit, qc, config):
       qc.h([i for i in range(len(layer))])
       continue
     for wireNo, gate in enumerate(layer):
-      if gate == "-":
+      if no_gate.match(gate):
         continue
       gate = gate.lower()
       if "(" in gate and ")" in gate:
@@ -29,9 +41,9 @@ def resolve_circuit(circuit, qc, config):
         param = gate[gate.index("(") + 1:gate.index(")")]
         op = getattr(qc, gate_name)
         if "," in param:
-          param = list(map(int, param.split(","))) + [wireNo]
+          param = list(map(float, param.split(","))) + [wireNo]
         else:
-          param = [int(param), wireNo]
+          param = [float(param), wireNo]
       else:
         param = [wireNo]
         op = getattr(qc, gate)

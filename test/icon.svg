@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1000" height="1000" viewBox="-500 -500 1000 1000">
   <rect x="-500" y="-500" width="100%" height="100%" rx="200" fill="#6929c4" />
   <g id="tetra">
-    <path fill="none" stroke="#999" stroke-width="10" d="M-259.80762-150 0-485.4102V-300L-259.80762 150 0 485.4102 420.37756 242.7051" id="A"/>
+    <path fill="none" stroke="#888" stroke-width="10" d="M-259.80762-150 0-485.4102V-300L-259.80762 150 0 485.4102 420.37756 242.7051" id="A"/>
     <use xlink:href="#A" transform="rotate(60)"/>
     <use xlink:href="#A" transform="rotate(-60)"/>
     <use xlink:href="#A" transform="rotate(120)"/>

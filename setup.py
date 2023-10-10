@@ -5,7 +5,7 @@ with open('Readme.md', 'r') as fh:
 
 setup(
   name='abrax',
-  version='0.1.0',
+  version='0.2.0',
   description='A Quantum Circuit DSL',
   long_description=long_description,
   long_description_content_type='text/markdown',
