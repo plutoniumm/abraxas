@@ -12,8 +12,8 @@ setup(
   author='plutoniumm',
   url="https://github.com/plutoniumm/abrax",
   license='MIT',
-  package_dir={'': 'src'},
-  packages=find_packages(where='src'),
+  package_dir={'': '.'},
+  packages=find_packages(where='.'),
   python_requires='>=3.9',
   install_requires=[],
   extras_require={
