@@ -30,13 +30,13 @@ from numpy import pi
 from abrax import A
 
 qc = QuantumCircuit(5)
-qc = A(f"""
+qc = A(qc, f"""
   - H CX(4) RX({pi/4})
   - H -     -
   - H -     CX(4)
   - H X     RY(55)
   - H -     -
-  """, qc
+  """
 )
 
 # Should be equivalent to
@@ -57,13 +57,12 @@ qc.measure_all()
 from abrax import A
 from qiskit import QuantumCircuit
 
-qc = QuantumCircuit(2)
 # This will apply H, H to 0-qubit & 1-qubit
 # Then a CX on 0-qubit (as target) with 1-qubit as control
-qc = A("""
+qc = A(QuantumCircuit(2), """
   - H CX(1)
   - H -
-  """, qc
+  """
 )
 ```
 
@@ -76,10 +75,10 @@ from qiskit import QuantumCircuit
 
 qc = QuantumCircuit(2)
 qc.h([0,1])
-qc = A("""
+qc = A(qc, """
   - RX(2) CX(1)
   - RX(3) -
-  """, qc
+  """
 )
 
 # Should be equivalent to
@@ -99,10 +98,10 @@ qc.rx(3, 1)
 
 **Passing Config**
 ```python
-qc = A("""
+qc = A(qc, """
 - H CX(1)
 - H -
-""", qc,
+""",
 config={
   "measure": False,
 })

@@ -69,6 +69,6 @@ def resolve_circuit(circuit, qc, config):
 default = {
   'measure': True,
 }
-def A(stri, qc, config=default):
+def A(qc, stri, config=default):
   circuit = parse_circuit(stri)
   return resolve_circuit(circuit, qc, config)

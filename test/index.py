@@ -1,9 +1,9 @@
 from qiskit import QuantumCircuit
-from abrax import A
+from .. import A
 from numpy import pi
 
 qc = QuantumCircuit(5)
-circuit = A(f"""
+circuit = A(qc, f"""
   // I AM JESUS
   // SPACES ARE SIGNIFICANT, DONOT add them inside a gate
   - H CX(4)  RX({pi})
@@ -11,7 +11,7 @@ circuit = A(f"""
   - H ---    CX(4)
   - H X      H
   - H ---    -------
-  """, qc
+  """
 )
 
 print(circuit)
