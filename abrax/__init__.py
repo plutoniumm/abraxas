@@ -1,1 +1,2 @@
-from .parser import A
+from parse import toQiskit, toCudaq  # noqa
+from compiler import toString  # noqa

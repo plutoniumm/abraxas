@@ -4,7 +4,7 @@
 
 A tiny DSL to compile to qiskit circuits. The goal is to speed up the time it takes to write small stupid circuits. Anything beyond a certain complexity should be written in qiskit directly.
 
-[Qiskit](https://qiskit.org/) &bullet; [Abraxas](https://foundation.fandom.com/wiki/Abraxas_Conjecture) &bullet; [Issues](https://github.com/plutoniumm/abraxas/issues) &bullet; [Latest](https://github.com/plutoniumm/abraxas/releases/latest)
+[Qiskit](https://qiskit.org/) &bullet; [CudaQ](https://nvidia.github.io/cuda-quantum/latest/install.html)
 
 > A breaking change may come soon where I change measure: True and just not do it, seems like a cleaner way to do it and will enable more things. Unless I can come up with a better way to implement Measurements
 
@@ -95,14 +95,21 @@ qc.rx(3, 1)
 - Note All lines must start with a `-` or `|>` (continuation operator `NotImplemented` yet)
 - Everything else is a comment
 - Case insensitive
+- It is recommended to not go between Str->Qiskit->CUDAQ multiple times since gates are slightly different in each. It'll keep adding useless gates to polyfill the differences
+
+**Supported conversions**:
+- `QuantumCircuit` -> `String`
+- `String` -> `QuantumCircuit`
+- `String` -> `CudaQ`
 
 **Passing Config**
 ```python
 qc = A(qc, """
-- H CX(1)
-- H -
-""",
-config={
+// you an also add labels -1, -2
+// i find this handy to count qubits
+-1 H CX(1)
+-2 H -
+""", config={
   "measure": False,
 })
 ```
