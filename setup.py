@@ -5,12 +5,12 @@ with open('Readme.md', 'r') as fh:
 
 setup(
   name='abrax',
-  version='0.2.1',
+  version='0.4.0',
   description='A Quantum Circuit DSL',
   long_description=long_description,
   long_description_content_type='text/markdown',
   author='plutoniumm',
-  url="https://github.com/plutoniumm/abrax",
+  url='https://github.com/plutoniumm/abrax',
   license='MIT',
   package_dir={'': '.'},
   packages=find_packages(where='.'),

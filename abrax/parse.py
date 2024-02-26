@@ -4,9 +4,6 @@ from _utils_parse import parse_circuit, isClose
 # SHOULD start with -, everything else is comment
 # ---, -1-, -1, -11, --11-
 no_gate = compile('-(-|[0-9]*){1,}')
-default = {
-  'measure': True,
-}
 
 
 def parse_param(p, typ=None):
@@ -61,7 +58,7 @@ circuit.GATE(*params, wireNo)
 """
 
 
-def resolve_qiskit(circuit, qc, config):
+def resolve_qiskit(circuit, qc):
   for _, layer in enumerate(circuit):
     for wireNo, gate in enumerate(layer):
       if no_gate.match(gate):
@@ -82,9 +79,6 @@ def resolve_qiskit(circuit, qc, config):
         op = getattr(qc, gate)
 
       op(*param)
-
-  if config['measure']:
-    qc.measure_all()
   return qc
 
 
@@ -96,7 +90,7 @@ kernel.gate(param?..., qubits[qubitno1], qubits[qubitno2]?...)
 """
 
 
-def resolve_cudaq(circuit, cudaO, config):
+def resolve_cudaq(circuit, cudaO):
   from cudaq import Kernel
 
   kernel = cudaO['kernel']
@@ -145,7 +139,7 @@ def resolve_cudaq(circuit, cudaO, config):
 # POLYFILL GATES
 # SGD, TDG
 # U1, U2, U3
-def resolve_pennylane(circuit, config=default):
+def resolve_pennylane(circuit):
   gate_map = {
     'id': 'Identity',
     'h': 'Hadamard',
@@ -179,9 +173,8 @@ def resolve_pennylane(circuit, config=default):
       gate = gate.lower()
       if '(' in gate and ')' in gate:
         gate_name = gate[: gate.index('(')]
-        gate_name = gate_map[gate_name]
+        op = gate_map[gate_name]
         param = gate[gate.index('(') + 1 : gate.index(')')]
-        op = gate_name
 
         if ',' in param:
           if gate_name in c_based:
@@ -196,14 +189,14 @@ def resolve_pennylane(circuit, config=default):
           param = [parse_param(param, pennyPass), wireNo]
       else:
         param = [wireNo]
-        op = gate
+        op = gate_map[gate]
 
       # if gate is a c* type gate then we pass
       # qubits as wires=[wireNo, wireNo2]
       progam = {
         'op': op,
       }
-      if gate_name in c_based:
+      if op in c_based:
         # pop last 2
         wires = param[-2:]
         param = param[:-2]
@@ -236,16 +229,16 @@ def resolve_pennylane(circuit, config=default):
   return genCirc, [0] * param_ct
 
 
-def toQiskit(qc, stri, config=default):
+def toQiskit(qc, stri):
   circuit = parse_circuit(stri)
-  return resolve_qiskit(circuit, qc, config)
+  return resolve_qiskit(circuit, qc)
 
 
-def toCudaq(cudaO, stri, config=default):
+def toCudaq(cudaO, stri):
   circuit = parse_circuit(stri)
-  return resolve_cudaq(circuit, cudaO, config)
+  return resolve_cudaq(circuit, cudaO)
 
 
-def toPennylane(stri, config=default):
+def toPennylane(stri):
   circuit = parse_circuit(stri)
-  return resolve_pennylane(circuit, config)
+  return resolve_pennylane(circuit)

@@ -2,118 +2,142 @@
 
 <img src="./assets/icon.svg" width="100" height="100" align="right" />
 
-A tiny DSL to compile to qiskit circuits. The goal is to speed up the time it takes to write small stupid circuits. Anything beyond a certain complexity should be written in qiskit directly.
+A tiny DSL to compile to quantum circuits. The goal is to speed up the time it takes to write small stupid circuits. Anything beyond a certain complexity should be written in the respective languages directlt directly.
 
-[Qiskit](https://qiskit.org/) &bullet; [CudaQ](https://nvidia.github.io/cuda-quantum/latest/install.html)
+[Qiskit](https://qiskit.org/) &bullet; [CudaQ](https://nvidia.github.io/cuda-quantum/latest/install.html) &bullet; [Pennylane](https://docs.pennylane.ai/en/stable/code/qml.html)
 
-> A breaking change may come soon where I change measure: True and just not do it, seems like a cleaner way to do it and will enable more things. Unless I can come up with a better way to implement Measurements
-
-### Install
-You will need Qiskit since Abraxas takes in an initialized `QuantumCircuit` object to write to.
+## Install
 ```py
 pip install abrax
 ```
 
-### Features
-- [x] Basic gates
-- [x] Value interpolation (just pass in $\pi$ if needed)
-- [x] Comments
-- [x] Optional measurement
-- [x] Append to existing circuit
-- [x] Feel free to add multiple `--` or more spaces for formatting
+## Syntax
+- Start with a `-` to denote a wire (you can also count `-0`, `-1`, `-2` as wires, these are just comments)
+- All gates are case insensitive with NO SPACES BETWEEN GATE AND ARGUMENTS
+- Arguments are in parenthesis `()` and separated by commas `,` ex: `H CX(2) CRX(3.1415,3)`
+- Abraxas is only the circuit part parser. All the other gymnastics of creating circuits/allocating memory/running them is still up to you.
 
-### Examples
-#### Fairly Complex
+## Examples
+### toQiskit
 ```python
 from qiskit import QuantumCircuit
-from numpy import pi
-from abrax import A
+from abrax import toQiskit
 
-qc = QuantumCircuit(5)
-qc = A(qc, f"""
-  - H CX(4) RX({pi/4})
-  - H -     -
-  - H -     CX(4)
+qc = QuantumCircuit(3)
+qc = toQiskit(qc, f"""
+  - H CX(2) RX({3.1415})
+  - H -     CX(2)
   - H X     RY(55)
-  - H -     -
   """
 )
 
-# Should be equivalent to
-from qiskit import QuantumCircuit
-
-qc = QuantumCircuit(5)
-qc.h([0, 1, 2, 3, 4])
-qc.cx(0, 4)
-qc.x(3)
-qc.rx(10, 0)
-qc.cx(2, 4)
-qc.ry(55, 3)
-qc.measure_all()
+# IS THE SAME AS
+#         ┌───┐┌───┐┌────────────┐
+#    q_0: ┤ H ├┤ X ├┤ Rx(3.1415) ├────────────────
+#         ├───┤└─┬─┘└────────────┘┌───┐
+#    q_1: ┤ H ├──┼────────────────┤ X ├───────────
+#         ├───┤  │      ┌───┐     └─┬─┘┌────────┐
+#    q_2: ┤ H ├──■──────┤ X ├───────■──┤ Ry(55) ├─
+#         └───┘         └───┘          └────────┘
 ```
 
-### Simple
+### toPennylane
 ```python
-from abrax import A
-from qiskit import QuantumCircuit
+import pennylane as qml
+from abrax import toPennyLane
 
-# This will apply H, H to 0-qubit & 1-qubit
-# Then a CX on 0-qubit (as target) with 1-qubit as control
-qc = A(QuantumCircuit(2), """
-  - H CX(1)
-  - H -
-  """
-)
+CIRC = f"""
+- H CX(2) RX(θ1)
+- H -     CX(2)
+- H X     RY(θ2)
+"""
+
+maker, params = toPennylane(CIRC)
+def circ():
+  # 0.0, 0.1 since 2 params
+  params = [0.1 * i for i in range(len(params))]
+  maker(qml, params)
+
+  return qml.probs()
+
+circuit = qml.QNode(circ, qml.device('default.qubit', wires=3))
+# IS THE SAME AS
+# 0: ──H─╭X──RX(0.00)───────────────┤  Probs
+# 1: ──H─│────────────╭X────────────┤  Probs
+# 2: ──H─╰●──X────────╰●──RY(0.01)──┤  Probs
+```
+
+### toCudaq
+```python
+from cudaq import make_kernel, sample
+from abrax import toCudaq
+
+CIRC = f"""
+-0 H CX(2) RX(θ1)
+-1 H -     CX(2)
+-2 H X     RY(θ2)
+"""
+
+kernel, thetas = make_kernel(list)
+qubits = kernel.qalloc(3)
+
+cudaO = {
+  'kernel': kernel,
+  'qubits': qubits,
+  'quake': thetas,
+  # this gets overwritten by the parser
+  'params': 0,
+}
+kernel = toCudaq(cudaO, CIRC)
+# expect 0.0, 0.1 since 2 params
+vals = [0.1 * i for i in range(cudaO['params'])]
+result = sample(kernel, vals)
+print(result)
+```
+
+### toPrime
+The prime string acts as a translation intermediate between various libraries. You can come to prime from Qiskit and go anywhere. (Coming to Prime from Pennylane/CudaQ is not supported yet)
+
+```python
+from qiskit.circuit.library import EfficientSU2
+from abrax import toPrime
+
+qc = EfficientSU2(3, reps=1).decompose()
+string = toPrime(qc)
+
+# IS THE SAME AS
+# -0 ry(θ[0]) rz(θ[3]) cx(1)    ry(θ[6])
+# -1 ry(θ[1]) rz(θ[4]) cx(2)    ry(θ[7])
+# -2 ry(θ[2]) rz(θ[5]) ry(θ[8]) rz(θ[11])
+```
+
+You can now even take this string and pass into `toPennylane` or `toCudaq` to convert to run it in them. Ex.
+
+```py
+# string from above
+maker, params = toPennylane(string)
+def circ():
+  # 12 params so 0.0, 0.1...1.1
+  params = [0.1 * i for i in range(len(params))]
+  maker(qml, params)
+
+  return qml.probs()
+
+circuit = qml.QNode(circ, qml.device('default.qubit', wires=3))
 ```
 
 ### Append
-Abraxas can also add to an existing circuit since it takes in your circuit and simply appends to it
-
-```python
-from abrax import A
-from qiskit import QuantumCircuit
-
-qc = QuantumCircuit(2)
-qc.h([0,1])
-qc = A(qc, """
-  - RX(2) CX(1)
-  - RX(3) -
-  """
-)
-
-# Should be equivalent to
-from qiskit import QuantumCircuit
-
-qc = QuantumCircuit(2)
-qc.h([0,1])
-qc.rx(2, 0)
-qc.cx(1, 0)
-qc.rx(3, 1)
-```
-
-### Syntax
-- Note All lines must start with a `-` or `|>` (continuation operator `NotImplemented` yet)
-- Everything else is a comment
-- Case insensitive
-- It is recommended to not go between Str->Qiskit->CUDAQ multiple times since gates are slightly different in each. It'll keep adding useless gates to polyfill the differences
+Abraxas can also add to an existing circuit since it takes in your circuit and simply appends to it. So you can pass in existing QuantumCircuit/CUDA Kernel, or add more operations in the Pennylane circ wrapper.
 
 **Supported conversions**:
-- `QuantumCircuit` -> `String`
+<!-- - `QuantumCircuit` -> `String`
 - `String` -> `QuantumCircuit`
-- `String` -> `CudaQ`
+- `String` -> `CudaQ` -->
+```mermaid
+graph TD
+  A[Qiskit] -->|"toPrime()"| B[String]
+  B -->|"toQiskit()"| C[Qiskit]
+  B -->|"toPennylane()"| D[Pennylane]
+  B -->|"toCudaq()"| E[CudaQuantum]
 
-**Passing Config**
-```python
-qc = A(qc, """
-// you an also add labels -1, -2
-// i find this handy to count qubits
--1 H CX(1)
--2 H -
-""", config={
-  "measure": False,
-})
 ```
-
-| Key | Type (Default) | Description |
-| --- | --- | --- |
-| `measure` | `bool` (`True`) | Whether to measure all qubits at the end of the circuit |
