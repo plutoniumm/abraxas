@@ -1,2 +1,2 @@
-from parse import toQiskit, toCudaq  # noqa
-from compiler import toString  # noqa
+from parse import toQiskit, toCudaq, toPennylane  # noqa
+from compiler import toPrime  # noqa

@@ -1,6 +1,6 @@
 ## abraxas
 
-<img src="./test/icon.svg" width="100" height="100" align="right" />
+<img src="./assets/icon.svg" width="100" height="100" align="right" />
 
 A tiny DSL to compile to qiskit circuits. The goal is to speed up the time it takes to write small stupid circuits. Anything beyond a certain complexity should be written in qiskit directly.
 

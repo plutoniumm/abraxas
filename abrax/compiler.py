@@ -1,7 +1,7 @@
 valid_gates = [
   ['h', 'x', 'y', 'z'],
   ['s', 't', 'sdg', 'tdg'],
-  ['cx', 'cz', 'ccx'],
+  ['cx', 'cy', 'cz'],
   ['swap', 'iswap'],
   ['rx', 'ry', 'rz'],
   ['u', 'u1', 'u2', 'u3'],
@@ -116,7 +116,7 @@ def compile_qiskit(qc, config) -> str:
 default = {}
 
 
-def toString(qc, config=default):
+def toPrime(qc, config=default):
   name = qc.__class__.__name__
   if name == 'QuantumCircuit':
     qc2 = preprocess(qc)

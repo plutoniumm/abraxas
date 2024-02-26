@@ -4,6 +4,9 @@ from _utils_parse import parse_circuit, isClose
 # SHOULD start with -, everything else is comment
 # ---, -1-, -1, -11, --11-
 no_gate = compile('-(-|[0-9]*){1,}')
+default = {
+  'measure': True,
+}
 
 
 def parse_param(p, typ=None):
@@ -40,6 +43,9 @@ def parse_param(p, typ=None):
       idx = typ['param_idx']
       typ['param_idx'] += 1
       return typ['quake'][idx]
+    elif typ['name'] == 'pnl':
+      typ['params'].append(0)
+      return ('VAR', len(typ['params']))
     else:
       raise Exception('Invalid type')
 
@@ -82,9 +88,6 @@ def resolve_qiskit(circuit, qc, config):
   return qc
 
 
-# TODO: POLYFILL GATES
-# ibm_valid_gates = ['u']
-# u(a,b,c) = rz(b)ry(a)rz(c)
 # cudaO = [kernel, qubits, params]
 # params = float | int | float[] | int[]
 """
@@ -139,9 +142,98 @@ def resolve_cudaq(circuit, cudaO, config):
   return kernel
 
 
-default = {
-  'measure': True,
-}
+# POLYFILL GATES
+# SGD, TDG
+# U1, U2, U3
+def resolve_pennylane(circuit, config=default):
+  gate_map = {
+    'id': 'Identity',
+    'h': 'Hadamard',
+    'x': 'PauliX',
+    'y': 'PauliY',
+    'z': 'PauliZ',
+    's': 'S',
+    't': 'T',
+    'rx': 'RX',
+    'ry': 'RY',
+    'rz': 'RZ',
+    'u': 'U3',
+    'cx': 'CNOT',
+    'cz': 'CZ',
+    'cy': 'CY',
+    'swap': 'SWAP',
+    'iswap': 'ISWAP',
+  }
+  c_based = ['CNOT', 'CZ', 'CY', 'SWAP', 'ISWAP']
+  pennyPass = {
+    'name': 'pnl',
+    'params': [],
+  }
+
+  evals = []
+
+  for _, layer in enumerate(circuit):
+    for wireNo, gate in enumerate(layer):
+      if no_gate.match(gate):
+        continue
+      gate = gate.lower()
+      if '(' in gate and ')' in gate:
+        gate_name = gate[: gate.index('(')]
+        gate_name = gate_map[gate_name]
+        param = gate[gate.index('(') + 1 : gate.index(')')]
+        op = gate_name
+
+        if ',' in param:
+          if gate_name in c_based:
+            param = list(map(parse_param, param.split(',')))
+            # remove 1st element and use it as wireNo2
+            wireNo2 = param.pop(0)
+            param = param + [wireNo, wireNo2]
+          else:
+            param = list(map(parse_param, param.split(',')))
+            param = param + [wireNo]
+        else:
+          param = [parse_param(param, pennyPass), wireNo]
+      else:
+        param = [wireNo]
+        op = gate
+
+      # if gate is a c* type gate then we pass
+      # qubits as wires=[wireNo, wireNo2]
+      progam = {
+        'op': op,
+      }
+      if gate_name in c_based:
+        # pop last 2
+        wires = param[-2:]
+        param = param[:-2]
+        progam['wires'] = wires
+        progam['param'] = param
+      else:
+        progam['wires'] = [param[-1]]
+        progam['param'] = param[:-1]
+
+      evals.append(progam)
+
+  def genCirc(qml, params):
+    for i in range(len(evals)):
+      exec = evals[i]
+      if len(exec['param']) > 0:
+        if (
+          isinstance(exec['param'][0], tuple)
+          and exec['param'][0][0] == 'VAR'
+        ):
+          index = exec['param'][0][1] - 1
+          exec['param'][0] = params[index]
+
+        op = getattr(qml, exec['op'])
+        op(*exec['param'], wires=exec['wires'])
+      else:
+        op = getattr(qml, exec['op'])
+        op(wires=exec['wires'])
+
+  param_ct = len(pennyPass['params'])
+  return genCirc, [0] * param_ct
 
 
 def toQiskit(qc, stri, config=default):
@@ -152,3 +244,8 @@ def toQiskit(qc, stri, config=default):
 def toCudaq(cudaO, stri, config=default):
   circuit = parse_circuit(stri)
   return resolve_cudaq(circuit, cudaO, config)
+
+
+def toPennylane(stri, config=default):
+  circuit = parse_circuit(stri)
+  return resolve_pennylane(circuit, config)
