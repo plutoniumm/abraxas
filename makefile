@@ -7,3 +7,7 @@ build:
 
 deploy:
 	twine upload dist/* -u plutoniumm -p $(TOK)
+
+test:
+	pip install .
+	python3 test.py

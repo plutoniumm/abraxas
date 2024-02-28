@@ -1,5 +1,5 @@
-from parse import toQiskit, toCudaq, toPennylane
-from compiler import toPrime
+from abrax import toQiskit, toCudaq, toPennylane
+from abrax import toPrime
 
 
 def ESU2():
@@ -23,6 +23,33 @@ SU2 = """
 
 
 if __name__ == '__main__':
+  import pennylane as qml
+
+  dev = qml.device('default.qubit', wires=[0, 1, 2])
+
+  @qml.qnode(dev)
+  def qfunc(x, y, z):
+    qml.Hadamard(wires=0)
+    qml.Hadamard(wires=1)
+    qml.Hadamard(wires=2)
+    qml.RZ(z, wires=2)
+    qml.CNOT(wires=[2, 1])
+    qml.RX(z, wires=0)
+    qml.CNOT(wires=[1, 0])
+    qml.RX(x, wires=0)
+    qml.CNOT(wires=[1, 0])
+    qml.RZ(-z, wires=2)
+    qml.RX(y, wires=2)
+    qml.PauliY(wires=2)
+    qml.CY(wires=[1, 2])
+    return qml.expval(qml.PauliZ(wires=0))
+
+  qfunc(0.1, 0.2, 0.3)
+  stringed = toPrime(qfunc)
+  print(stringed)
+
+
+if __name__ == '__main__2':
   CIRC = SU2
   QS = len(SU2.strip().split('\n'))
 

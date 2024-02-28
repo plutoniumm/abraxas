@@ -1,0 +1,13 @@
+{
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.20.1",
+    "astro": "^4.3.5",
+    "sharp": "^0.32.5",
+    "typescript": "^5.3.3"
+  }
+}

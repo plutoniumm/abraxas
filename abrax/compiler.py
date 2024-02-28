@@ -1,13 +1,4 @@
-valid_gates = [
-  ['h', 'x', 'y', 'z'],
-  ['s', 't', 'sdg', 'tdg'],
-  ['cx', 'cy', 'cz'],
-  ['swap', 'iswap'],
-  ['rx', 'ry', 'rz'],
-  ['u', 'u1', 'u2', 'u3'],
-  ['id'],
-]
-valid_gates = [i for j in valid_gates for i in j]
+from ._utils_compile import matrix_to_str, valid_gates
 
 
 # check if .index or ._index is a valid index
@@ -19,7 +10,7 @@ def isIndex(qc):
     return '_index'
 
 
-def preprocess(qc):
+def qis_preprep(qc):
   from qiskit import QuantumCircuit
   from numpy import pi
 
@@ -53,7 +44,48 @@ def getParam(p):
   return str(p)
 
 
-def compile_qiskit(qc, config) -> str:
+def compile_pennylane(qfunc) -> str:
+  from ._utils_parse import pnl_gate_map
+
+  tape = qfunc.qtape
+  num_qubits = len(tape.wires.tolist())
+  matrix = [[] for _ in range(num_qubits)]
+  for i in tape.operations:
+    gate = i.name
+    qubits = i.wires.tolist()
+    params = i.parameters
+    # name reverse
+    if gate in pnl_gate_map.values():
+      gate = list(pnl_gate_map.keys())[
+        list(pnl_gate_map.values()).index(gate)
+      ]
+    if gate not in valid_gates:
+      print(f'USED GATE: {gate}')
+      raise ValueError(
+        f'Invalid gate: {gate}, try decomposing the circuit. Or it may be unsupported by abraxas.'
+      )
+
+    if len(params) > 0:
+      param = ','.join([getParam(x) for x in params])
+    else:
+      param = None
+
+    if len(qubits) == 1:
+      if param:
+        matrix[qubits[0]].append([gate, param])
+      else:
+        matrix[qubits[0]].append(gate)
+    elif len(qubits) == 2:
+      matrix[qubits[0]].append([gate, qubits[1]])
+    else:
+      raise ValueError(
+        f'Unsupported operation: {gate} with {len(qubits)} qubits'
+      )
+
+  return matrix_to_str(matrix)
+
+
+def compile_qiskit(qc) -> str:
   matrix = [[] for _ in range(qc.num_qubits)]
   index = lambda x: getattr(x, isIndex(qc))  # noqa
 
@@ -90,36 +122,15 @@ def compile_qiskit(qc, config) -> str:
         f'Unsupported operation: {gate} with {len(qargs)} qubits'
       )
 
-  matrix = [*zip(*matrix)]
-  stris = ['-' + str(i) for i in range(qc.num_qubits)]
-  for i in range(len(matrix)):
-    for j in range(len(matrix[0])):
-      if isinstance(matrix[i][j], list):
-        arg = matrix[i][j][1]
-        # arg may have , in it and parser can deal with it
-        stris[j] += f' {matrix[i][j][0]}({arg})'
-      else:
-        stris[j] += f' {matrix[i][j]}'
-
-    # padding stris to make them equal width
-    max = 0
-    for j in stris:
-      if len(j) > max:
-        max = len(j)
-
-    for j in range(len(stris)):
-      stris[j] += ' ' * (max - len(stris[j]))
-
-  return '\n'.join(stris)
+  return matrix_to_str(matrix)
 
 
-default = {}
-
-
-def toPrime(qc, config=default):
+def toPrime(qc):
   name = qc.__class__.__name__
   if name == 'QuantumCircuit':
-    qc2 = preprocess(qc)
-    return compile_qiskit(qc2, config)
+    qc2 = qis_preprep(qc)
+    return compile_qiskit(qc2)
+  elif name == 'QNode':
+    return compile_pennylane(qc)
   else:
     raise ValueError(f'Unsupported circuit: {name}')

@@ -1,6 +1,6 @@
 ## abraxas
 
-<img src="./assets/icon.svg" width="100" height="100" align="right" />
+<img src="./docs/public/favicon.svg" width="100" height="100" align="right" />
 
 A tiny DSL to compile to quantum circuits. The goal is to speed up the time it takes to write small stupid circuits. Anything beyond a certain complexity should be written in the respective languages directlt directly.
 

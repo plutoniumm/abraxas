@@ -140,24 +140,8 @@ def resolve_cudaq(circuit, cudaO):
 # SGD, TDG
 # U1, U2, U3
 def resolve_pennylane(circuit):
-  gate_map = {
-    'id': 'Identity',
-    'h': 'Hadamard',
-    'x': 'PauliX',
-    'y': 'PauliY',
-    'z': 'PauliZ',
-    's': 'S',
-    't': 'T',
-    'rx': 'RX',
-    'ry': 'RY',
-    'rz': 'RZ',
-    'u': 'U3',
-    'cx': 'CNOT',
-    'cz': 'CZ',
-    'cy': 'CY',
-    'swap': 'SWAP',
-    'iswap': 'ISWAP',
-  }
+  from ._utils_parse import pnl_gate_map
+
   c_based = ['CNOT', 'CZ', 'CY', 'SWAP', 'ISWAP']
   pennyPass = {
     'name': 'pnl',
@@ -173,7 +157,7 @@ def resolve_pennylane(circuit):
       gate = gate.lower()
       if '(' in gate and ')' in gate:
         gate_name = gate[: gate.index('(')]
-        op = gate_map[gate_name]
+        op = pnl_gate_map[gate_name]
         param = gate[gate.index('(') + 1 : gate.index(')')]
 
         if ',' in param:
@@ -189,7 +173,7 @@ def resolve_pennylane(circuit):
           param = [parse_param(param, pennyPass), wireNo]
       else:
         param = [wireNo]
-        op = gate_map[gate]
+        op = pnl_gate_map[gate]
 
       # if gate is a c* type gate then we pass
       # qubits as wires=[wireNo, wireNo2]

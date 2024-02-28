@@ -1,3 +1,23 @@
+pnl_gate_map = {
+  'id': 'Identity',
+  'h': 'Hadamard',
+  'x': 'PauliX',
+  'y': 'PauliY',
+  'z': 'PauliZ',
+  's': 'S',
+  't': 'T',
+  'rx': 'RX',
+  'ry': 'RY',
+  'rz': 'RZ',
+  'u': 'U3',
+  'cx': 'CNOT',
+  'cz': 'CZ',
+  'cy': 'CY',
+  'swap': 'SWAP',
+  'iswap': 'ISWAP',
+}
+
+
 def parse_circuit(string):
   lines = map(lambda e: e.strip(), string.strip().split('\n'))
   cleaned = []
