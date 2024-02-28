@@ -1,5 +1,5 @@
 from re import compile
-from _utils_parse import parse_circuit, isClose
+from ._utils_parse import parse_circuit, isClose
 
 # SHOULD start with -, everything else is comment
 # ---, -1-, -1, -11, --11-
