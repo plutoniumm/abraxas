@@ -1,36 +1,25 @@
 ---
-title: Welcome to Starlight
-description: Get started building your docs site with Starlight.
+title: Welcome to Abraxas
+description: An IR for Quantum Circuits
 template: splash
 hero:
-  tagline: Congrats on setting up a new Starlight project!
-  image:
-    file: ../../assets/houston.webp
+  tagline: Interop between Quantum Circuits in different languages with low overhead
   actions:
-    - text: Example Guide
-      link: /guides/example/
+    - text: Read Docs
+      link: /welcome
       icon: right-arrow
       variant: primary
-    - text: Read the Starlight docs
-      link: https://starlight.astro.build
+    - text: Contribute to Abraxas
+      link: https://github.com/plutoniumm/abraxas
       icon: external
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
-
-## Next steps
-
-<CardGrid stagger>
-	<Card title="Update content" icon="pencil">
-		Edit `src/content/docs/index.mdx` to see this page change.
-	</Card>
-	<Card title="Add new content" icon="add-document">
-		Add Markdown or MDX files to `src/content/docs` to create new pages.
-	</Card>
-	<Card title="Configure your site" icon="setting">
-		Edit your `sidebar` and other config in `astro.config.mjs`.
-	</Card>
-	<Card title="Read the docs" icon="open-book">
-		Learn more in [the Starlight Docs](https://starlight.astro.build/).
-	</Card>
-</CardGrid>
+<div style="display: flex">
+  <div style="flex: 1; margin-right: 20px">
+		<h3>Interop between Quantum Circuits in different languages</h3>
+		<p>Abraxas is a peudo <a href="https://en.wikipedia.org/wiki/Intermediate_representation">Intermediate Representation (IR)</a> that allows for the simple interop between quantum circuits in different frameworks with low overhead</p>
+	</div>
+	<div style="flex: 1; margin-left: 20px">
+		<img src="/favicon.svg" alt="Abraxas Logo" width="150px" height="150px"/>
+	</div>
+</div>

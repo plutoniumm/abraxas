@@ -50,6 +50,20 @@ def compile_pennylane(qfunc) -> str:
   tape = qfunc.qtape
   num_qubits = len(tape.wires.tolist())
   matrix = [[] for _ in range(num_qubits)]
+
+  ops2 = tape.operations
+  # everytime there is a Tofolli, remove it and add 2 CNOTs a,b | b,c
+  for i in range(len(ops2)):
+    if ops2[i].name == 'Toffoli':
+      a, b, c = ops2[i].wires.tolist()
+      tape.operations[i] = tape.operations[i]._replace(
+        name='CNOT', wires=[a, b]
+      )
+      tape.operations.insert(
+        i + 1, tape.operations[i]._replace(name='CNOT', wires=[b, c])
+      )
+
+
   for i in tape.operations:
     gate = i.name
     qubits = i.wires.tolist()
