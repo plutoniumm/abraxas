@@ -1,20 +1,84 @@
+from dataclasses import dataclass
+
+
+@dataclass
+class PNLGate:
+  name: str
+  wires: list
+  parameters: list
+
+
+def pwires(wires):
+  if not isinstance(wires, list):
+    wires = wires.tolist()
+  return wires
+
+
+def pnl_tdg(wire):
+  return [
+    PNLGate('RZ', [wire], [-0.7854]),
+  ]
+
+
+# rot(a,b,c)->rz(c)ry(b)rz(a)
+def pnl_rot(rot):
+  params = rot.parameters
+  wires = pwires(rot.wires)
+  a, b, c = params
+
+  return [
+    PNLGate('RZ', wires, [c]),
+    PNLGate('RY', wires, [b]),
+    PNLGate('RZ', wires, [a]),
+  ]
+
+
+def pnl_toffoli(toffoli):
+  a, b, c = pwires(toffoli.wires)
+  # Ref: Treat as same
+  # Tdg = RZ(-pi/4)
+  # T = RZ(pi/4)
+  # Sdg = RZ(-pi/2)
+  # S = RZ(pi/2)
+  substitute = [
+    ['Hadamard', [c]],
+    ['CNOT', [c, b]],
+    ['Tdg', [c]],
+    ['CNOT', [c, a]],
+    ['T', [c]],
+    ['CNOT', [c, b]],
+    ['T', [b]],
+    ['Tdg', [c]],
+    ['CNOT', [c, a]],
+    ['CNOT', [b, a]],
+    ['T', [c]],
+    ['T', [a]],
+    ['Tdg', [b]],
+    ['Hadamard', [c]],
+    ['CNOT', [b, a]],
+  ]
+
+  for j in range(len(substitute)):
+    substitute[j] = PNLGate(
+      name=substitute[j][0],
+      wires=substitute[j][1],
+      parameters=[],
+    )
+
+  return substitute
+
+
 pnl_gate_map = {
   'id': 'Identity',
   'h': 'Hadamard',
   'x': 'PauliX',
   'y': 'PauliY',
   'z': 'PauliZ',
-  's': 'S',
-  't': 'T',
-  'rx': 'RX',
-  'ry': 'RY',
-  'rz': 'RZ',
   'u': 'U3',
   'cx': 'CNOT',
-  'cz': 'CZ',
-  'cy': 'CY',
   'swap': 'SWAP',
   'iswap': 'ISWAP',
+  'p': 'PhaseShift',
 }
 
 
@@ -43,5 +107,4 @@ def parse_circuit(string):
   return list(map(list, zip(*by_rows)))
 
 
-def isClose(a, b):
-  return abs(a - b) < 0.001
+isClose = lambda a, b: abs(a - b) < 0.001

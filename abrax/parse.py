@@ -60,7 +60,10 @@ circuit.GATE(*params, wireNo)
 
 def resolve_qiskit(circuit, qc):
   for _, layer in enumerate(circuit):
+    # read top to down, default is bottom to top
+    layer.reverse()
     for wireNo, gate in enumerate(layer):
+      wireNo = len(layer) - wireNo - 1
       if no_gate.match(gate):
         continue
       gate = gate.lower()
@@ -108,6 +111,7 @@ def resolve_cudaq(circuit, cudaO):
     kernel.rz(c, u)
 
   Kernel.u = u
+  Kernel.p = Kernel.r1
 
   for _, layer in enumerate(circuit):
     for wireNo, gate in enumerate(layer):
@@ -157,7 +161,11 @@ def resolve_pennylane(circuit):
       gate = gate.lower()
       if '(' in gate and ')' in gate:
         gate_name = gate[: gate.index('(')]
-        op = pnl_gate_map[gate_name]
+        if gate_name in pnl_gate_map:
+          op = pnl_gate_map[gate_name]
+        else:
+          op = gate_name.upper()
+
         param = gate[gate.index('(') + 1 : gate.index(')')]
 
         if ',' in param:

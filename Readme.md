@@ -6,6 +6,11 @@ A tiny DSL to compile to quantum circuits. The goal is to speed up the time it t
 
 [Qiskit](https://qiskit.org/) &bullet; [CudaQ](https://nvidia.github.io/cuda-quantum/latest/install.html) &bullet; [Pennylane](https://docs.pennylane.ai/en/stable/code/qml.html)
 
+<!-- hooks need some preproc for qis & pennylane -->
+- hooks for qiskit
+- hooks for pennylane
+
+
 ## Install
 ```py
 pip install abrax

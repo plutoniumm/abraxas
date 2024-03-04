@@ -20,40 +20,38 @@ SU2 = """
 -3 ry(θ[3]) rz(θ[8])  ---      ry(θ[13]) rz(θ[18])  ---      ry(θ[23])
 -4 ry(θ[4]) rz(θ[9]) ry(θ[14]) rz(θ[19]) ry(θ[24]) rz(θ[29]) u(1.5708,0,3.1416)
 """
+# SU2 = """
+# -0 h ry(0.3) cx(1)
+# -1 h ry(0.3) ---- sx
+# """
 
 
-if __name__ == '__main__':
+def pnlTest():
   import pennylane as qml
 
   dev = qml.device('default.qubit', wires=[0, 1, 2])
 
   @qml.qnode(dev)
-  def qfunc(x, y, z):
-    qml.Hadamard(wires=0)
-    qml.Hadamard(wires=1)
-    qml.Hadamard(wires=2)
-    qml.RZ(z, wires=2)
-    qml.CNOT(wires=[2, 1])
-    qml.RX(z, wires=0)
-    qml.CNOT(wires=[1, 0])
-    qml.RX(x, wires=0)
-    qml.CNOT(wires=[1, 0])
-    qml.RZ(-z, wires=2)
-    qml.RX(y, wires=2)
-    qml.PauliY(wires=2)
-    qml.CY(wires=[1, 2])
-    return qml.expval(qml.PauliZ(wires=0))
+  def circuit(x):
+    # qml.RX(x[0], wires=0)
+    qml.Toffoli(wires=(0, 1, 2))
+    # qml.CRY(x[1], wires=(0, 1))
+    # qml.Rot(x[2], x[3], x[0], wires=0)
+    return qml.expval(qml.PauliZ(0))
 
-  qfunc(0.1, 0.2, 0.3)
-  stringed = toPrime(qfunc)
+  circuit([0.1, 0.2, 0.3, 0.4])
+  stringed = toPrime(circuit)
   print(stringed)
 
+  from qiskit import QuantumCircuit
 
-if __name__ == '__main__2':
-  CIRC = SU2
-  QS = len(SU2.strip().split('\n'))
+  qc = QuantumCircuit(3)
+  qiskit = toQiskit(qc, stringed)
+  print(qiskit)
 
-  """QISKIT"""
+
+def qis2pnl(CIRC):
+  QS = len(CIRC.strip().split('\n'))
   from qiskit import QuantumCircuit
 
   qisO = QuantumCircuit(QS)
@@ -75,19 +73,55 @@ if __name__ == '__main__2':
   circuit = qml.QNode(genCirc, dev)
   print(qml.draw(circuit)())
 
+
+def qis2cuq(CIRC):
+  QS = len(CIRC.strip().split('\n'))
+
+  from qiskit import QuantumCircuit
+
+  qisO = QuantumCircuit(QS)
+  qis = toQiskit(qisO, CIRC)
+  print(qis)
+
   """CUDAQ"""
-  # from cudaq import make_kernel, sample
+  from cudaq import make_kernel, sample
 
-  # kernel, thetas = make_kernel(list)
-  # qubits = kernel.qalloc(5)
+  kernel, thetas = make_kernel(list)
+  qubits = kernel.qalloc(5)
 
-  # cudaO = {
-  #   'kernel': kernel,
-  #   'qubits': qubits,
-  #   'quake': thetas,
-  #   'params': 0,
+  cudaO = {
+    'kernel': kernel,
+    'qubits': qubits,
+    'quake': thetas,
+    'params': 0,
+  }
+  cuq = toCudaq(cudaO, SU2)
+  vals = [0.1 * i for i in range(cudaO['params'])]
+  result = sample(kernel, vals)
+  print(result)
+
+
+if __name__ == '__main__':
+  # from qiskit import QuantumCircuit
+
+  # su = QuantumCircuit(2)
+  # su.h(0)
+  # su.h(1)
+  # su.ry(0.3, 0)
+  # su.ry(0.3, 1)
+  # su.cx(0, 1)
+  # su.sx(1)
+  # print(su.draw())
+
+  # pi = 3.14159
+  # hooks = {
+  #   'sx': [
+  #     lambda qc, gate: qc.p(-pi / 4, gate[1][0]),
+  #     lambda qc, gate: qc.rx(pi / 2, gate[1][0]),
+  #   ]
   # }
-  # cuq = toCudaq(cudaO, SU2)
-  # vals = [0.1 * i for i in range(cudaO['params'])]
-  # result = sample(kernel, vals)
-  # print(result)
+
+  # print(toPrime(su, hooks))
+
+  qis2pnl(SU2)
+  # pnlTest()
