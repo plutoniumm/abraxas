@@ -1,8 +1,6 @@
 ---
 title: Get Started
 description: A starter guide for abraxas
-sidebar:
-  order: 1
 ---
 
 Abraxas is itself zero-dependency, but you will need to install the dependencies for the specific tasks you want to run. For example, if you want to use the `qiskit` with abraxas you will need qiskit too!

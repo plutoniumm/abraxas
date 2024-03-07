@@ -1,21 +1,34 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 const sidebar = [
 	{
 		label: 'Guides',
 		items: [
 			{ label: 'Welcome', link: '/welcome' },
-			{ label: 'toPrime', link: '/prime' },
+			{ label: 'String', link: '/prime' },
+			{ label: 'Parse', link: '/parse' },
+			{ label: 'Uses', link: '/uses' },
 		],
 	},
+	{
+		label: 'Modifiers',
+		items: [
+			{ label: 'String', link: '/prime-mod' },
+		],
+	}
 ];
-
 
 // https://astro.build/config
 export default defineConfig( {
 	site: 'https://plutoniumm.github.io',
 	base: import.meta.env.DEV ? '/' : '/abraxas/',
+	markdown: {
+		remarkPlugins: [ remarkMath ],
+		rehypePlugins: [ rehypeKatex ],
+	},
 	integrations: [
 		starlight( {
 			title: 'Abraxas',
@@ -23,6 +36,9 @@ export default defineConfig( {
 				github: 'https://github.com/plutoniumm/abraxas',
 			},
 			sidebar,
+			customCss: [
+				"./src/css/katex.css"
+			]
 		} ),
 	],
 } );

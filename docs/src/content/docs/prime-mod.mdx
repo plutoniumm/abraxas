@@ -1,0 +1,69 @@
+---
+title: toPrime
+description: Convert a quantum circuit to prime string
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="danger">
+  NOT YET IMPLEMENTED
+</Aside>
+
+# Modifiers
+Since only basic gates are supported, additional gates can be added via hooks into the `toPrime` function.
+
+## Qiskit
+```python
+qc = QuantumCircuit(2)
+for i in range(2):
+  qc.h(i)
+  qc.ry(0.3, i)
+su.cx(0, 1)
+su.sx(1)
+
+pi = 3.14159
+hooks = {
+  'sx': [
+    lambda qc, gate: qc.p(-pi / 4, gate[1][0]),
+    lambda qc, gate: qc.rx(pi / 2, gate[1][0]),
+  ]
+}
+
+string = toPrime(qc, hooks=hooks)
+```
+
+Hooks accepts a dictionary with the gate name as the key. The value can be a single function or a list of functions to be applied to the circuit. In the example above the $\sqrt x$ gate is substituted by a $R_x$ and a $P$ gate.
+
+Each function receives the quantum circuit and the gate as arguments. The gate is a tuple with the gate name and the qubits it acts on.
+
+```python
+hooks = {
+  # single function map
+  'id': lambda qc, gate: qc.rx(0, gate[1][0]),
+  # multiple function map
+  'sx':[
+    lambda qc, gate: qc.p(-pi / 4, gate[1][0]),
+    # feel free to hard code the param/qubits
+    lambda qc, gate: qc.rx(3.14 / 2, 3),
+  ]
+}
+```
+
+## PennyLane
+<Aside type="caution">
+  NOTIMPLEMENTED
+</Aside>
+
+```python
+def circuit(params, wires):
+  qml.Hadamard(wires=wires[0])
+  qml.RY(params[0], wires=wires[0])
+  qml.CNOT(wires=wires)
+  qml.SX(wires=wires[1])
+
+hooks = {
+  'SX': [
+    lambda qc, gate: qc.p(-pi / 4, gate[1][0]),
+    lambda qc, gate: qc.rx(pi / 2, gate[1][0]),
+  ]
+}

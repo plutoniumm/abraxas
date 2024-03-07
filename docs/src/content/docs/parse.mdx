@@ -1,0 +1,63 @@
+---
+title: Parse
+description: Parse a prime string back to a qiskit, pennylane or cudaq circuit
+---
+
+# Parse
+```python
+# let's say our string is
+CIRCUIT="""
+-0 H Rx(theta) H       CX(1)
+-1 H Rx(alpha) RY(0.5) ----
+"""
+```
+
+Let's now convert this to any relevant circuit
+
+## Qiskit
+```python
+from qiskit import QuantumCircuit
+from abrax import toQiskit
+
+qc = QuantumCircuit(2)
+qc = toQiskit(qc, CIRCUIT)
+# this is the qiskit with params = [theta, alpha]
+```
+
+## PennyLane
+```python
+import pennylane as qml
+from abrax import toPennylane
+
+maker, params = toPennylane(CIRCUIT)
+def circ():
+  # params default [theta, alpha] = [0, 0]
+  params = [i for i in params]
+  maker(qml, [0.1, 0.2])
+
+  return qml.probs()
+
+dev = qml.device('default.qubit', wires=2)
+circuit = qml.QNode(circ, dev)
+```
+
+## CudaQ
+```python
+from cudaq import make_kernel, sample
+from abrax import toCudaq
+
+kernel, thetas = make_kernel(list)
+qubits = kernel.qalloc(2)
+
+cudaO = {
+  'kernel': kernel,
+  'qubits': qubits,
+  'quake': thetas,
+  # this gets overwritten by the parser
+  'params': 0,
+}
+vals = [i for i in range(cudaO['params'])]
+kernel = toCudaq(cudaO, CIRCUIT)
+# expect 0, 1 since 2 params theta, alpha
+# feel free to run as needed
+```
