@@ -6,7 +6,7 @@ name: Upload Python Package
 on: [push]
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -54,4 +54,4 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@releases/v3
         with:
           BRANCH: gh-pages
-          FOLDER: dist
+          FOLDER: docs/dist
