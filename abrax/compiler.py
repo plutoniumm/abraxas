@@ -8,6 +8,8 @@ def isIndex(qc):
     return 'index'
   elif hasattr(gate, '_index'):
     return '_index'
+  # endif
+# end
 
 
 from typing import Dict, Union, Callable, List
@@ -50,8 +52,11 @@ def qis_preprep(qc, hooks: Dict[str, Hook]):
       #     hooks[gate](newc, i)
       # else:
       newc.append(i)
+    # endif
+  # endfor
 
   return newc
+# end
 
 
 def getParam(p):
@@ -59,6 +64,7 @@ def getParam(p):
     p = round(p, 4)
 
   return str(p)
+# end
 
 
 def flat(l):
@@ -68,7 +74,10 @@ def flat(l):
       out.extend(flat(item))
     else:
       out.append(item)
+    # endif
+  # endfor
   return out
+# end
 
 
 def compile_pennylane(qfunc, hooks) -> str:
@@ -99,6 +108,8 @@ def compile_pennylane(qfunc, hooks) -> str:
       ops[i] = [PNLGate('Tdg', wires, [])] * 2
     else:
       pass
+    # endif
+  # endfor
 
   ops = flat(ops)
 
@@ -121,6 +132,7 @@ def compile_pennylane(qfunc, hooks) -> str:
       params = [-pi / 4]
     else:
       gate = gate.lower()
+    # endif
 
     if gate not in valid_gates:
       print(f'USED GATE: {gate}')
@@ -136,25 +148,31 @@ def compile_pennylane(qfunc, hooks) -> str:
         if len(matrix[l]) < mlen:
           for _ in range(mlen - len(matrix[l])):
             matrix[l].append('id')
+    # endif
 
     if len(params) > 0:
       param = ','.join([getParam(x) for x in params])
     else:
       param = None
+    # endif
 
     if len(qubits) == 1:
       if param:
         matrix[qubits[0]].append([gate, param])
       else:
         matrix[qubits[0]].append(gate)
+      # endif
     elif len(qubits) == 2:
       matrix[qubits[0]].append([gate, qubits[1]])
     else:
       raise ValueError(
         f'Unsupported operation: {gate} with {len(qubits)} qubits'
       )
+    # endif
+  # endfor
 
   return matrix_to_str(matrix)
+# end
 
 
 def compile_qiskit(qc) -> str:

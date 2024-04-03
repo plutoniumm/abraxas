@@ -29,9 +29,10 @@ def parse_param(p, typ=None):
 
     else:
       return int(p)
+    # endif
+  except Exception:
   # this means we need to make a variable
   # since float/int didn't work
-  except Exception:
     if typ is None or typ == 'qis':
       from qiskit.circuit import Parameter
 
@@ -45,8 +46,11 @@ def parse_param(p, typ=None):
       return ('VAR', len(typ['params']))
     else:
       raise Exception('Invalid type')
+    # endif
+  # endtry
 
   return p
+# end
 
 
 # TODO: POLYFILL GATES
@@ -77,12 +81,17 @@ def resolve_qiskit(circuit, qc):
           param = param + [wireNo]
         else:
           param = [parse_param(param, 'qis'), wireNo]
+        # endif
       else:
         param = [wireNo]
         op = getattr(qc, gate)
+      # endif
 
       op(*param)
+    # endfor
+  # endfor
   return qc
+# end
 
 
 # cudaO = [kernel, qubits, params]
@@ -130,14 +139,18 @@ def resolve_cudaq(circuit, cudaO):
           if gate_name == 'cx':
             param = qubits[int(param)]
           param = [parse_param(param, cudaPass), qubits[wireNo]]
+        # endif
       else:
         param = [qubits[wireNo]]
         op = getattr(kernel, gate)
-
+      # endif
       op(*param)
+    # endfor
+  # endfor
 
   cudaO['params'] = cudaPass['param_idx']
   return kernel
+# end
 
 
 # POLYFILL GATES
@@ -165,6 +178,7 @@ def resolve_pennylane(circuit):
           op = pnl_gate_map[gate_name]
         else:
           op = gate_name.upper()
+        # endif
 
         param = gate[gate.index('(') + 1 : gate.index(')')]
 
@@ -177,11 +191,14 @@ def resolve_pennylane(circuit):
           else:
             param = list(map(parse_param, param.split(',')))
             param = param + [wireNo]
+          # endif
         else:
           param = [parse_param(param, pennyPass), wireNo]
+        # endif
       else:
         param = [wireNo]
         op = pnl_gate_map[gate]
+      # endif
 
       # if gate is a c* type gate then we pass
       # qubits as wires=[wireNo, wireNo2]
@@ -197,8 +214,12 @@ def resolve_pennylane(circuit):
       else:
         progam['wires'] = [param[-1]]
         progam['param'] = param[:-1]
+      # endif
 
       evals.append(progam)
+    # endfor
+  # endfor
+# end
 
   def genCirc(qml, params):
     for i in range(len(evals)):
@@ -216,21 +237,27 @@ def resolve_pennylane(circuit):
       else:
         op = getattr(qml, exec['op'])
         op(wires=exec['wires'])
+      # endif
+    # endfor
 
   param_ct = len(pennyPass['params'])
   return genCirc, [0] * param_ct
+# end
 
 
 def toQiskit(qc, stri):
   circuit = parse_circuit(stri)
   return resolve_qiskit(circuit, qc)
+# end
 
 
 def toCudaq(cudaO, stri):
   circuit = parse_circuit(stri)
   return resolve_cudaq(circuit, cudaO)
+# end
 
 
 def toPennylane(stri):
   circuit = parse_circuit(stri)
   return resolve_pennylane(circuit)
+# end
