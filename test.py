@@ -1,6 +1,6 @@
 from abrax import toQiskit, toCudaq, toPennylane
+from utils import whatall, what
 from abrax import toPrime
-
 
 def ESU2():
   from qiskit.circuit.library import EfficientSU2
@@ -100,28 +100,35 @@ def qis2cuq(CIRC):
   result = sample(kernel, vals)
   print(result)
 
+"""# MAIN"""
+import pennylane as qml
 
-if __name__ == '__main__':
-  # from qiskit import QuantumCircuit
+dev = qml.device("default.qubit", wires=3)
 
-  # su = QuantumCircuit(2)
-  # su.h(0)
-  # su.h(1)
-  # su.ry(0.3, 0)
-  # su.ry(0.3, 1)
-  # su.cx(0, 1)
-  # su.sx(1)
-  # print(su.draw())
+@qml.qnode(dev)
+def circuit(angles):
+  print(angles)
+  qml.Hadamard(wires=1)
+  qml.Hadamard(wires=2)
+  qml.RX(angles[0], 0)
+  qml.CNOT(wires=[1, 0])
+  qml.CNOT(wires=[2, 1])
+  qml.RX(angles[2], wires=0)
+  qml.RZ(angles[1], wires=2)
+  qml.CNOT(wires=[2, 1])
+  qml.RZ(-angles[1], wires=2)
+  qml.CNOT(wires=[1, 0])
+  qml.Hadamard(wires=1)
+  qml.CY(wires=[1, 2])
+  qml.CNOT(wires=[1, 0])
 
-  # pi = 3.14159
-  # hooks = {
-  #   'sx': [
-  #     lambda qc, gate: qc.p(-pi / 4, gate[1][0]),
-  #     lambda qc, gate: qc.rx(pi / 2, gate[1][0]),
-  #   ]
-  # }
+  return qml.state()
 
-  # print(toPrime(su, hooks))
+circuit.construct([[0.1, 0.3, 0.5]], {})
+t = circuit.qtape.to_openqasm()
+print(t)
+# qasm = tape.to_openqasm()
+# print(qasm)
 
-  qis2pnl(SU2)
-  # pnlTest()
+# qis2pnl(SU2)
+# pnlTest()

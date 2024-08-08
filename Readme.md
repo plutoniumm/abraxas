@@ -146,3 +146,27 @@ graph TD
   B -->|"toCudaq()"| E[CudaQuantum]
 
 ```
+
+## Hooks
+```py
+from qiskit import QuantumCircuit
+
+su = QuantumCircuit(2)
+su.h(0)
+su.h(1)
+su.ry(0.3, 0)
+su.ry(0.3, 1)
+su.cx(0, 1)
+su.sx(1)
+print(su.draw())
+
+pi = 3.14159
+hooks = {
+  'sx': [
+    lambda qc, gate: qc.p(-pi / 4, gate[1][0]),
+    lambda qc, gate: qc.rx(pi / 2, gate[1][0]),
+  ]
+}
+
+print(toPrime(su, hooks))
+```

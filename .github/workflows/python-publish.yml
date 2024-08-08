@@ -32,26 +32,3 @@ jobs:
       with:
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
-
-  docs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Use Node20
-        uses: actions/setup-node@v1
-        with:
-          node-version: 20.x
-
-      - name: Change dir
-        run: |
-          cd docs
-          npm install
-          npm run build
-          cd ..
-
-      - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@releases/v3
-        with:
-          BRANCH: gh-pages
-          FOLDER: docs/dist
