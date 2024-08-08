@@ -1,7 +1,8 @@
 from pytket.circuit import Circuit
 import pennylane as qml
 import qiskit as qk
-from compiler import toPrime
+import cirq as cirq
+from parser import toPrime
 
 dev = qml.device("default.qubit", wires=2)
 @qml.qnode(dev)
@@ -31,9 +32,26 @@ def bell_quan(theta):
 
   return circ
 
-# res = toPrime(circuit)
-# print(res)
-# res2 = toPrime(bell_ibm(.1))
-# print(res2)
-# res3 = toPrime(bell_quan(.1))
-# print(res3)
+def bell_cirq(theta):
+
+  circ = cirq.Circuit()
+  q0, q1 = cirq.LineQubit.range(2)
+  circ.append(cirq.H(q0))
+  circ.append(cirq.CNOT(q0, q1))
+  circ.append(cirq.ry(theta)(q0))
+  circ.append(cirq.ry(theta)(q1))
+
+  return circ
+
+QASM="""
+OPENQASM 2.0;
+include "qelib1.inc";
+
+qreg q[2];
+
+
+h q[0];
+cx q[0],q[1];
+ry(pi*0.0318309886) q[0];
+ry(pi*0.0318309886) q[1];
+""".strip()

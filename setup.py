@@ -4,8 +4,8 @@ with open('Readme.md', 'r') as fh:
   long_description = fh.read()
 
 setup(
-  name='ranken',
-  version='0.0.1',
+  name='abrax',
+  version='0.1.0',
   description='Finding Entanglement Rank',
   long_description=long_description,
   long_description_content_type='text/markdown',
