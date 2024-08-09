@@ -31,8 +31,8 @@ def parseVars(string):
 
 def toQiskit(string):
   from qiskit.circuit import QuantumCircuit, Parameter
-  from qiskit.converters import circuit_to_dag
   from qiskit.transpiler import TransformationPass
+  from qiskit.converters import circuit_to_dag
 
   string, variables, params = parseVars(string)
   variables = [Parameter(p) for p in variables]
@@ -64,26 +64,70 @@ def toQiskit(string):
   return transpiled
 
 def toPenny(string, device):
-  string, variables = parseVars(string)
   from pennylane import qml
+  from pennylane.tape import make_qscript
+
+  string, variables, params = parseVars(string)
   qc = qml.from_qasm(string)
-  qc = qml.QNode(qc, device)
+  ops = list(make_qscript(qc)())
+  new_ops = []
+  for op in ops:
+    if op.num_params > 0:
+      old_params = op.parameters
+      new_params = []
+      for p in op.parameters:
+        if p in params:
+          idx = params.index(p)
+          new_params.append(variables[idx])
+        else:
+          new_params.append(p)
+      print(old_params, new_params)
+      # new_params = []
+      # for p in op.parameters:
+      #   if p in params:
+      #     idx = params.index(p)
+      #     new_params.append(variables[idx])
+      #   else:
+      #     new_params.append(p)
+      # op.parameters = new_params
+    # new_ops.append(op)
 
   return qc
 
 def toTket(string):
-  string, variables = parseVars(string)
   from pytket.qasm import circuit_from_qasm_str
+  string, variables = parseVars(string)
   qc = circuit_from_qasm_str(string)
 
   return qc
 
 def toCirq(string):
-  string, variables, params = parseVars(string)
-  print(string, variables, params)
   from cirq.contrib.qasm_import import circuit_from_qasm
+  from cirq import map_operations
+  import cirq as cirq
+  from sympy import Symbol
+  string, variables, params = parseVars(string)
+
+  def map_func(op, _):
+    if hasattr(op.gate, 'exponent'):
+      expo = op.gate.exponent
+      if expo in params:
+        idx = params.index(expo)
+        idx = Symbol(str(variables[idx]))
+
+        gate = getattr(cirq, op.gate.__class__.__name__)
+        op = gate(rads=idx).on(*op.qubits)
+        print(op)
+        yield op
+      else:
+        yield op
+    else:
+      yield op
+
+  params = [i/np.pi for i in params]
+  # print(string, variables, params)
+
   qc = circuit_from_qasm(string)
+  qc2 = map_operations(qc, map_func)
 
-  print(qc)
-
-  return qc
+  return qc2

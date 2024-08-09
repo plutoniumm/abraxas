@@ -7,7 +7,7 @@ from parser import toPrime, autoParam
 from compile import toCirq, toQiskit, toTket, toPenny
 
 dev = qml.device("default.qubit", wires=2)
-PARSE = True
+PARSE = False
 
 if PARSE:
   @qml.qnode(dev)
@@ -76,6 +76,6 @@ ry(var_theta2) q[1];
 """.strip()
 
 # qc = toQiskit(QASM)
-# qc2 = toPenny(QASM, dev)
-qc3 = toCirq(QASM)
+qc2 = toPenny(QASM, dev)
+# qc3 = toCirq(QASM)
 # qc4 = toTket(QASM)
