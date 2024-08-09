@@ -1,10 +1,3 @@
-from re import compile
-
-# return compile_qiskit(qc2)
-# return compile_penny(qc)
-# return compile_tket(qc)
-# return compile_cirq(qc)
-
 def toQiskit(string):
   from qiskit import QuantumCircuit
   qc = QuantumCircuit.from_qasm_str(string)

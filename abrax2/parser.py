@@ -1,17 +1,6 @@
-from _utils_compile import matrix_to_str, valid_gates
 from typing import Dict, Union, Callable, List
 from qiskit.qasm2 import dumps
 import numpy as np
-
-def what(o):
-  params =  [i for i in dir(o) if not i.startswith('_')]
-  params.sort()
-  return params
-
-def whatnot(o):
-  params = [i for i in dir(o) if (i.startswith('_') and not i.startswith('__'))]
-  params.sort()
-  return params
 
 class Unlist(list):
   def __init__(self):
@@ -56,6 +45,7 @@ def compile_cirq(qc, params):
   t = qasm(qc).strip()
 
   return t
+
 
 def autoParam(int):
   rand = np.round(np.random.rand(), 6)

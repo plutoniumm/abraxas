@@ -56,11 +56,10 @@ if PARSE:
 
     return circ
 
-  # print(toPrime(bell_penny, params=autoParam(4)))
   print(toPrime(bell_penny))
-  # print(toPrime(bell_quan()))
-  # print(toPrime(bell_ibm()))
-  # print(toPrime(bell_cirq()))
+  print(toPrime(bell_quan()))
+  print(toPrime(bell_ibm()))
+  print(toPrime(bell_cirq()))
 
 
 QASM="""
