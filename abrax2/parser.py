@@ -13,10 +13,19 @@ def whatnot(o):
   params.sort()
   return params
 
+class Unlist(list):
+  def __init__(self):
+    self.append(0)
+    self.__class__.__module__ = "builtins"
+
+  def __getitem__(self, index):
+    while index >= len(self):
+      self.append(index)
+    return super(Unlist, self).__getitem__(index)
+
 def compile_penny(qc, params):
-  qc2 = qc
-  qc2.construct([params], {})
-  t = qc2.qtape.to_openqasm().strip()
+  qc.construct([params], {})
+  t = qc.qtape.to_openqasm().strip()
 
   return t
 
@@ -27,8 +36,10 @@ def compile_qiskit(qc, params):
   return t
 
 def compile_tket(qc, params):
-  print(what(qc))
-  return ""
+  params = params / np.pi
+  qc.symbol_substitution(
+    dict(zip(qc.free_symbols(), params))
+  )
   from pytket.extensions.qiskit import tk_to_qiskit
   t = tk_to_qiskit(qc)
   t = dumps(t).strip()
@@ -59,13 +70,26 @@ def toPrime(qc):
   converted = None
 
   if name == 'QuantumCircuit':
+    # QISKIT
     params = autoParam(len(qc.parameters))
     converted = compile_qiskit(qc, params=params)
   elif name == 'QNode':
-    converted = compile_penny(qc, params=params)
+    # PENNYLANE
+    qc2 = qc
+    x0 = Unlist()
+    qc2(x0)
+    params = autoParam(len(x0))
+    converted = compile_penny(qc2, params=params)
   elif base == 'pybind11_object':
+    # TKET
+    variables = []
+    for p in qc:
+      variables.extend(p.free_symbols())
+    variables = list(set(variables))
+    params = autoParam(len(variables))
     converted = compile_tket(qc, params=params)
   elif name == 'Circuit':
+    # CIRQ
     params = autoParam(len(list(qc._parameter_names_())))
     converted = compile_cirq(qc, params=params)
   else:
