@@ -170,3 +170,12 @@ hooks = {
 
 print(toPrime(su, hooks))
 ```
+
+## Known Issues
+- Don't parameterise 'exponent' in cirq for variational circuits. Else it will hard code in some random value. As a slow hack you can run the transpiler in a for loop everytime the exponent/rads change.
+
+<!-- ## Supported Frameworks
+<img src="./docs/assets/criq.jpg" width="150" />
+<img src="./docs/assets/tket.jpg" width="150" />
+<img src="./docs/assets/penny.jpg" width="150" />
+<img src="./docs/assets/qiskit.jpg" width="150" /> -->
