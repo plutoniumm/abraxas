@@ -56,10 +56,10 @@ if PARSE:
 
     return circ
 
-  print(toPrime(bell_penny))
-  print(toPrime(bell_quan()))
-  print(toPrime(bell_ibm()))
-  print(toPrime(bell_cirq()))
+  # print(toPrime(bell_penny))
+  # print(toPrime(bell_quan()))
+  # print(toPrime(bell_ibm()))
+  # print(toPrime(bell_cirq()))
 
 
 QASM="""
@@ -71,15 +71,11 @@ qreg q[2];
 
 h q[0];
 cx q[0],q[1];
-ry(pi*0.0318309886) q[0];
-ry(pi*0.0318309886) q[1];
+ry(var_theta1) q[0];
+ry(var_theta2) q[1];
 """.strip()
 
 # qc = toQiskit(QASM)
 # qc2 = toPenny(QASM, dev)
-# qc3 = toCirq(QASM)
+qc3 = toCirq(QASM)
 # qc4 = toTket(QASM)
-# print("toQiskit: \n", qc)
-# print("toPenny: \n", qml.draw(qc2)())
-# print("toCirq: \n", qc3)
-# print("toTket: \n", qc4)

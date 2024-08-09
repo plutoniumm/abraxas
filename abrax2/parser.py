@@ -1,4 +1,3 @@
-from typing import Dict, Union, Callable, List
 from qiskit.qasm2 import dumps
 import numpy as np
 
@@ -25,11 +24,11 @@ def compile_qiskit(qc, params):
   return t
 
 def compile_tket(qc, params):
+  from pytket.extensions.qiskit import tk_to_qiskit
   params = params / np.pi
   qc.symbol_substitution(
     dict(zip(qc.free_symbols(), params))
   )
-  from pytket.extensions.qiskit import tk_to_qiskit
   t = tk_to_qiskit(qc)
   t = dumps(t).strip()
 
@@ -57,36 +56,42 @@ def toPrime(qc):
   name = qc.__class__.__name__
   base = qc.__class__.__base__.__name__
   params = [0]
-  converted = None
+  qasmd = None
 
   if name == 'QuantumCircuit':
-    # QISKIT
-    params = autoParam(len(qc.parameters))
-    converted = compile_qiskit(qc, params=params)
+    name = "Qiskit"
+    names = [i.name for i in qc.parameters]
+    params = autoParam(len(names))
+    qasmd = compile_qiskit(qc, params=params)
+
   elif name == 'QNode':
-    # PENNYLANE
+    name = "PennyLane"
     qc2 = qc
-    x0 = Unlist()
-    qc2(x0)
-    params = autoParam(len(x0))
-    converted = compile_penny(qc2, params=params)
+    names = Unlist()
+    qc2(names)
+    names = [str(i) for i in names]
+    params = autoParam(len(names))
+    qasmd = compile_penny(qc2, params=params)
+
   elif base == 'pybind11_object':
-    # TKET
-    variables = []
+    name = "TKet"
+    names = []
     for p in qc:
-      variables.extend(p.free_symbols())
-    variables = list(set(variables))
-    params = autoParam(len(variables))
-    converted = compile_tket(qc, params=params)
+      names.extend(p.free_symbols())
+    names = list(set(names))
+    params = autoParam(len(names))
+    qasmd = compile_tket(qc, params=params)
+
   elif name == 'Circuit':
-    # CIRQ
-    params = autoParam(len(list(qc._parameter_names_())))
-    converted = compile_cirq(qc, params=params)
+    name = "Cirq"
+    names = list(qc._parameter_names_())
+    params = autoParam(len(names))
+    qasmd = compile_cirq(qc, params=params)
   else:
     raise ValueError(f'Unsupported circuit: {name}')
 
   # replace all params back with var_i
   for i in range(len(params)):
-    converted = converted.replace(str(params[i]), f'var_{i}')
+    qasmd = qasmd.replace(str(params[i]), f'var_{names[i]}')
 
-  return converted
+  return qasmd
