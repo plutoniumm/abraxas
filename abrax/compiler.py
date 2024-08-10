@@ -1,235 +1,165 @@
-from ._utils_compile import matrix_to_str, valid_gates
+from typing import cast
+from re import compile, findall
+import numpy as np
+
+vargex = compile("var_\w*")
+
+def autoParam(int):
+  rand = np.round(np.random.rand(), 6)
+  rand = [rand+(i/1e5) for i in range(int)]
+  rand = np.round(rand, 7)
+  return rand
+
+def parseVars(string):
+  variables = []
+
+  # string will contain var_0, var_1, etc.
+  for line in string.split("\n"):
+    if "var_" in line:
+      matches = findall(vargex, line)
+      variables.extend(matches)
+    # endif
+  # endfor
+  variables = list(set(variables))
+  params = list(autoParam(len(variables)))
+
+  for i, var in enumerate(variables):
+    string = string.replace(var, str(params[i]))
+
+  variables = [i.replace('var_', '') for i in variables]
+  return string, variables, params
 
 
-# check if .index or ._index is a valid index
-def isIndex(qc):
-  gate = qc.data[0][1][0]
-  if hasattr(gate, 'index'):
-    return 'index'
-  elif hasattr(gate, '_index'):
-    return '_index'
-  # endif
-# end
+def toQiskit(string):
+  from qiskit.circuit import QuantumCircuit, Parameter
+  from qiskit.transpiler import TransformationPass
+  from qiskit.converters import circuit_to_dag
 
+  string, variables, params = parseVars(string)
+  variables = [Parameter(p) for p in variables]
 
-from typing import Dict, Union, Callable, List
+  qc = QuantumCircuit.from_qasm_str(string)
+  class BackReplace(TransformationPass):
+    def run(self, dag):
+      for node in dag.op_nodes():
+        cparams = node.op.params
+        if len(cparams) == 0:
+          continue
+        replacement = QuantumCircuit(len(cparams))
+        op = node.op.copy()
+        new_params = []
+        for p in cparams:
+          if p in params:
+            idx = params.index(p)
+            new_params.append(variables[idx])
+          else:
+            new_params.append(p)
 
-Hook = Union[Callable, List[Callable]]
+        op.params = new_params
+        replacement.append(op, [0])
 
+        dag.substitute_node_with_dag(node, circuit_to_dag(replacement))
+      return dag
 
-def qis_preprep(qc, hooks: Dict[str, Hook]):
-  from qiskit import QuantumCircuit
-  from numpy import pi
+  transpiled = BackReplace()(qc)
+  return transpiled
 
-  qregs = qc.qregs
-  cregs = qc.cregs
-  newc = QuantumCircuit(*qregs, *cregs)
+def toPenny(string, device):
+  from pennylane import qml
+  from pennylane.tape import make_qscript
 
-  for i in qc.data:
-    # i = (gate, qargs, cargs)
-    # gate is just the gate applied
-    # qargs is the qubits the gate is applied to
-    gate = i[0].name
-    if (gate not in valid_gates) and (gate not in hooks.keys()):
-      raise ValueError(
-        f'Invalid gate: {gate}, try decomposing the circuit. Or it may be unsupported by abraxas.'
+  string, variables, params = parseVars(string)
+  qc = qml.from_qasm(string)
+  ops = list(make_qscript(qc)())
+  new_ops = []
+  for op in ops:
+    if op.num_params > 0:
+      new_params = []
+      for p in op.parameters:
+        if p in params:
+          idx = params.index(p)
+          p = variables[idx]
+        # endif
+        new_params.append(p)
+      # endfor
+      op.data = tuple(
+        np.array(p)
+          if isinstance(p, (list, tuple))
+          else p for p in new_params
       )
-
-    if gate == 'u1':
-      newc.u(0, 0, i[0].params[0], i[1][0])
-    elif gate == 'u2':
-      newc.u(pi / 2, i[0].params[0], i[0].params[1], i[1][0])
-    elif gate == 'u3':
-      newc.u(i[0].params[0], i[0].params[1], i[0].params[2], i[1][0])
-    else:
-      # if hooks is not None and gate in hooks:
-      #   # a gate may be replaced by multiple gates
-      #   # hook is key: lambda (circuit, instruction): ...
-      #   if isinstance(hooks[gate], list):
-      #     for j in hooks[gate]:
-      #       j(newc, i)
-      #   else:
-      #     hooks[gate](newc, i)
-      # else:
-      newc.append(i)
     # endif
+    new_ops.append(op)
   # endfor
 
-  return newc
-# end
+  def circuit():
+    for op in new_ops:
+      qml.apply(op)
+    return qml.state()
 
+  circuit=qml.QNode(circuit, device)
+  return circuit
 
-def getParam(p):
-  if isinstance(p, float):
-    p = round(p, 4)
+"""START OF TKET"""
+def printket(circ):
+  from pytket.circuit.display import get_circuit_renderer
+  CR = get_circuit_renderer()
+  CR.set_render_options(zx_style=True)
+  CR.condense_c_bits = False
+  CR.min_height = "300px"
+  print(CR.render_circuit_as_html(circ))
 
-  return str(p)
-# end
+def unstring(pars):
+  pars = [i.replace('/pi', '') for i in pars]
+  pars = [i[1:-1] if i[0] == '(' else i for i in pars]
+  pars = [float(i) for i in pars]
+  return pars
 
+# use Circuit.to_dict | Circuit.from_dict for debugging
+def toTket(string):
+  from pytket.qasm.qasm import parser, CircuitTransformer as CT
+  from pytket import Circuit
 
-def flat(l):
-  out = []
-  for item in l:
-    if isinstance(item, (list, tuple)):
-      out.extend(flat(item))
-    else:
-      out.append(item)
-    # endif
-  # endfor
-  return out
-# end
+  string, variables, params = parseVars(string)
+  jsond = parser(maxwidth=32).parse(string)
 
-
-def compile_pennylane(qfunc, hooks) -> str:
-  from ._utils_parse import (
-    pnl_gate_map,
-    pnl_toffoli,
-    PNLGate,
-    pnl_rot,
-    pwires,
-  )
-
-  pi = 3.141592653589793
-  tape = qfunc.qtape
-  num_qubits = len(tape.wires.tolist())
-  matrix = [[] for _ in range(num_qubits)]
-
-  ops = tape.operations
-  # DECOMPOSITIONS
-  for i in range(len(ops)):
-    if ops[i].name == 'Toffoli':
-      ops[i] = pnl_toffoli(ops[i])
-    elif ops[i].name == 'Rot':
-      ops[i] = pnl_rot(ops[i])
-    elif ops[i].name == 'S':
-      wires = pwires(ops[i].wires)
-      ops[i] = [PNLGate('T', wires, [])] * 2
-    elif ops[i].name == 'Sdg':
-      ops[i] = [PNLGate('Tdg', wires, [])] * 2
-    else:
-      pass
-    # endif
+  for cmd in jsond['commands']:
+    if 'params' not in cmd['op']:
+      continue # no parameters
+    cpars = unstring(cmd['op']['params'])
+    new_params = []
+    for p in cpars:
+      if p in params:
+        p = variables[params.index(p)]
+      new_params.append(p)
+    # endfor
+    cmd['op']['params'] = new_params
   # endfor
 
-  ops = flat(ops)
+  qc = Circuit.from_dict(jsond)
+  return qc
 
-  for i in ops:
-    gate = i.name
-    qubits = pwires(i.wires)
-    params = i.parameters
-    # name reverse
-    if gate in pnl_gate_map.values():
-      gate = list(pnl_gate_map.keys())[
-        list(pnl_gate_map.values()).index(gate)
-      ]
+def toCirq(string):
+  from cirq.contrib.qasm_import import circuit_from_qasm
+  from sympy import Symbol
+  import cirq as c
+  string, variables, params = parseVars(string)
 
-    # manual map in for T and Tdg
-    if gate == 'T':
-      gate = 'rz'
-      params = [pi / 4]
-    elif gate == 'Tdg':
-      gate = 'rz'
-      params = [-pi / 4]
-    else:
-      gate = gate.lower()
-    # endif
+  def map_func(op, _):
+    if hasattr(op.gate, 'exponent'):
+      expo = op.gate.exponent
+      if expo in params:
+        idx = params.index(expo)
+        idx = Symbol(str(variables[idx]))
 
-    if gate not in valid_gates:
-      print(f'USED GATE: {gate}')
-      raise ValueError(
-        f'Invalid gate: {gate}, try decomposing the circuit. Or it may be unsupported by abraxas.'
-      )
-
-    if len(qubits) == 2:
-      # first fill all unequal rows with id
-      # then add cx
-      mlen = max([len(x) for x in matrix])
-      for l in range(len(matrix)):
-        if len(matrix[l]) < mlen:
-          for _ in range(mlen - len(matrix[l])):
-            matrix[l].append('id')
-    # endif
-
-    if len(params) > 0:
-      param = ','.join([getParam(x) for x in params])
-    else:
-      param = None
-    # endif
-
-    if len(qubits) == 1:
-      if param:
-        matrix[qubits[0]].append([gate, param])
-      else:
-        matrix[qubits[0]].append(gate)
+        gate = getattr(c, op.gate.__class__.__name__)
+        op = gate(rads=idx).on(*op.qubits)
       # endif
-    elif len(qubits) == 2:
-      matrix[qubits[0]].append([gate, qubits[1]])
-    else:
-      raise ValueError(
-        f'Unsupported operation: {gate} with {len(qubits)} qubits'
-      )
-    # endif
-  # endfor
+    yield op
 
-  return matrix_to_str(matrix)
-# end
+  params = [i/np.pi for i in params]
+  # print(string, variables, params)
 
+  qc = circuit_from_qasm(string)
+  qc2 = c.map_operations(qc, map_func)
 
-def compile_qiskit(qc) -> str:
-  matrix = [[] for _ in range(qc.num_qubits)]
-  index = lambda x: getattr(x, isIndex(qc))  # noqa
-
-  for i in qc.data:
-    gate = i[0].name
-    if gate not in valid_gates:
-      raise ValueError(
-        f'Invalid gate: {gate}, try decomposing the circuit. Or it may be unsupported by abraxas.'
-      )
-    if gate == 'measure':
-      continue
-
-    # for cx, fill all rows with id
-    if len(i[1]) == 2:
-      mlen = max([len(x) for x in matrix])
-      for l in range(len(matrix)):
-        if len(matrix[l]) < mlen:
-          for _ in range(mlen - len(matrix[l])):
-            matrix[l].append('id')
-
-    qargs = i[1]
-    if len(i[0].params) > 0:
-      param = ','.join([getParam(x) for x in i[0].params])
-    else:
-      param = None
-
-    # if the gate is a single qubit gate
-    # it may have a param
-    idx = index(qargs[0])
-    if len(qargs) == 1:
-      if param:
-        matrix[idx].append([gate, param])
-      else:
-        matrix[idx].append(gate)
-    # if the gate is a two qubit gate
-    # it wont have a param
-    elif len(qargs) == 2:
-      matrix[idx].append([gate, index(qargs[1])])
-    else:
-      raise ValueError(
-        f'Unsupported operation: {gate} with {len(qargs)} qubits'
-      )
-
-  return matrix_to_str(matrix)
-
-
-def toPrime(qc, hooks=None):
-  name = qc.__class__.__name__
-  if hooks is None:
-    hooks = {}
-  if name == 'QuantumCircuit':
-    qc2 = qis_preprep(qc, hooks)
-    return compile_qiskit(qc2)
-  elif name == 'QNode':
-    return compile_pennylane(qc, hooks)
-  else:
-    raise ValueError(f'Unsupported circuit: {name}')
+  return qc2

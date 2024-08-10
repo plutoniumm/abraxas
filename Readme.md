@@ -135,16 +135,23 @@ circuit = qml.QNode(circ, qml.device('default.qubit', wires=3))
 Abraxas can also add to an existing circuit since it takes in your circuit and simply appends to it. So you can pass in existing QuantumCircuit/CUDA Kernel, or add more operations in the Pennylane circ wrapper.
 
 **Supported conversions**:
-<!-- - `QuantumCircuit` -> `String`
-- `String` -> `QuantumCircuit`
-- `String` -> `CudaQ` -->
 ```mermaid
-graph TD
-  A[Qiskit] -->|"toPrime()"| B[String]
-  B -->|"toQiskit()"| C[Qiskit]
-  B -->|"toPennylane()"| D[Pennylane]
-  B -->|"toCudaq()"| E[CudaQuantum]
+graph LR
+  subgraph Circuit
+    direction LR
+    IR[Pseudo-QASM]
+    IR2[QASM]
+  end
+  A0[Qiskit] --> Circuit
+  B0[Pennylane] --> Circuit
+  C0[Cirq] --> Circuit
+  D0[TKet] --> Circuit
+  E0[Quil] --> Circuit
 
+  Circuit --> A1[Qiskit]
+  Circuit --> B1[Pennylane]
+  Circuit --> C1[Cirq]
+  Circuit --> D1[TKet]
 ```
 
 ## Hooks

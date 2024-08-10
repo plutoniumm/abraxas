@@ -6,8 +6,8 @@ import pennylane as qml
 import cirq as cirq
 import qiskit as qk
 
+from compiler import toCirq, toQiskit, toTket, toPenny
 from parser import toQasm
-from compile import toCirq, toQiskit, toTket, toPenny
 
 dev = qml.device("default.qubit", wires=2)
 PARSE = False
@@ -33,6 +33,7 @@ if PARSE:
     qc.cx(0, 1)
     qc.ry(a, 0)
     qc.ry(b, 1)
+    qc.measure_all()
 
     return qc
 
@@ -47,12 +48,18 @@ if PARSE:
     return circ
 
   def bell_quil():
-    p = Program(
-      G.H(0),
-      G.CNOT(0, 1),
-      G.RY(0.5, 0),
-      G.RY(0.5, 1)
-    )
+    p = Program()
+    ro = p.declare("ro", "BIT", 2)
+    theta1 = p.declare("theta1", "REAL")
+    theta2 = p.declare("theta2", "REAL")
+
+    p += G.H(0)
+    p += G.CNOT(0, 1)
+    p += G.RY(theta1, 0)
+    p += G.RY(theta2, 1)
+    p += G.MEASURE(0, ro[0])
+    p += G.MEASURE(1, ro[1])
+
     return p
 
   def bell_cirq():
@@ -72,6 +79,7 @@ if PARSE:
   # print(toQasm(bell_quan()))
   # print(toQasm(bell_ibm()))
   # print(toQasm(bell_cirq()))
+  # print(toQasm(bell_quil()))
 
 
 QASM="""
@@ -87,7 +95,7 @@ ry(var_theta1) q[0];
 ry(var_theta2) q[1];
 """.strip()
 
-print(toQiskit(QASM))
-print(toPenny(QASM, dev))
-print(toCirq(QASM))
-print(toTket(QASM))
+# print(toQiskit(QASM))
+# print(toPenny(QASM, dev))
+# print(toCirq(QASM))
+# print(toTket(QASM))
