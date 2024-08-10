@@ -52,7 +52,7 @@ def autoParam(int):
   rand = np.round(rand, 7)
   return rand
 
-def toPrime(qc):
+def toQasm(qc):
   name = qc.__class__.__name__
   base = qc.__class__.__base__.__name__
   params = [0]

@@ -1,9 +1,12 @@
 from pytket.circuit import Circuit
-import pennylane as qml
-import qiskit as qk
-import cirq as cirq
+from pyquil import Program
+import pyquil.gates as G
 from sympy import Symbol
-from parser import toPrime, autoParam
+import pennylane as qml
+import cirq as cirq
+import qiskit as qk
+
+from parser import toQasm
 from compile import toCirq, toQiskit, toTket, toPenny
 
 dev = qml.device("default.qubit", wires=2)
@@ -43,6 +46,15 @@ if PARSE:
 
     return circ
 
+  def bell_quil():
+    p = Program(
+      G.H(0),
+      G.CNOT(0, 1),
+      G.RY(0.5, 0),
+      G.RY(0.5, 1)
+    )
+    return p
+
   def bell_cirq():
     from sympy import Symbol
     theta1, theta2 = Symbol('theta1'), Symbol('theta2')
@@ -56,10 +68,10 @@ if PARSE:
 
     return circ
 
-  # print(toPrime(bell_penny))
-  # print(toPrime(bell_quan()))
-  # print(toPrime(bell_ibm()))
-  # print(toPrime(bell_cirq()))
+  # print(toQasm(bell_penny))
+  # print(toQasm(bell_quan()))
+  # print(toQasm(bell_ibm()))
+  # print(toQasm(bell_cirq()))
 
 
 QASM="""
@@ -75,7 +87,7 @@ ry(var_theta1) q[0];
 ry(var_theta2) q[1];
 """.strip()
 
-# qc = toQiskit(QASM)
-qc2 = toPenny(QASM, dev)
-# qc3 = toCirq(QASM)
-# qc4 = toTket(QASM)
+print(toQiskit(QASM))
+print(toPenny(QASM, dev))
+print(toCirq(QASM))
+print(toTket(QASM))

@@ -1,3 +1,4 @@
+from typing import cast
 from re import compile, findall
 import numpy as np
 
@@ -73,39 +74,74 @@ def toPenny(string, device):
   new_ops = []
   for op in ops:
     if op.num_params > 0:
-      old_params = op.parameters
       new_params = []
       for p in op.parameters:
         if p in params:
           idx = params.index(p)
-          new_params.append(variables[idx])
-        else:
-          new_params.append(p)
-      print(old_params, new_params)
-      # new_params = []
-      # for p in op.parameters:
-      #   if p in params:
-      #     idx = params.index(p)
-      #     new_params.append(variables[idx])
-      #   else:
-      #     new_params.append(p)
-      # op.parameters = new_params
-    # new_ops.append(op)
+          p = variables[idx]
+        # endif
+        new_params.append(p)
+      # endfor
+      op.data = tuple(
+        np.array(p)
+          if isinstance(p, (list, tuple))
+          else p for p in new_params
+      )
+    # endif
+    new_ops.append(op)
+  # endfor
 
-  return qc
+  def circuit():
+    for op in new_ops:
+      qml.apply(op)
+    return qml.state()
 
+  circuit=qml.QNode(circuit, device)
+  return circuit
+
+def printket(circ):
+  from pytket.circuit.display import get_circuit_renderer
+  CR = get_circuit_renderer()
+  CR.set_render_options(zx_style=True)
+  CR.condense_c_bits = False
+  CR.min_height = "300px"
+  print(CR.render_circuit_as_html(circ))
+
+
+def unstring(pars):
+  pars = [i.replace('/pi', '') for i in pars]
+  pars = [i[1:-1] if i[0] == '(' else i for i in pars]
+  pars = [float(i) for i in pars]
+  return pars
+
+# use Circuit.to_dict | Circuit.from_dict for debugging
 def toTket(string):
-  from pytket.qasm import circuit_from_qasm_str
-  string, variables = parseVars(string)
-  qc = circuit_from_qasm_str(string)
+  from pytket.qasm.qasm import parser, CircuitTransformer as CT
+  from pytket import Circuit
 
+  string, variables, params = parseVars(string)
+  jsond = parser(maxwidth=32).parse(string)
+
+  for cmd in jsond['commands']:
+    if 'params' not in cmd['op']:
+      continue # no parameters
+    cpars = unstring(cmd['op']['params'])
+    new_params = []
+    for p in cpars:
+      if p in params:
+        p = variables[params.index(p)]
+      new_params.append(p)
+    # endfor
+    cmd['op']['params'] = new_params
+  # endfor
+
+  qc = Circuit.from_dict(jsond)
   return qc
 
 def toCirq(string):
   from cirq.contrib.qasm_import import circuit_from_qasm
-  from cirq import map_operations
-  import cirq as cirq
   from sympy import Symbol
+  import cirq as c
   string, variables, params = parseVars(string)
 
   def map_func(op, _):
@@ -115,19 +151,15 @@ def toCirq(string):
         idx = params.index(expo)
         idx = Symbol(str(variables[idx]))
 
-        gate = getattr(cirq, op.gate.__class__.__name__)
+        gate = getattr(c, op.gate.__class__.__name__)
         op = gate(rads=idx).on(*op.qubits)
-        print(op)
-        yield op
-      else:
-        yield op
-    else:
-      yield op
+      # endif
+    yield op
 
   params = [i/np.pi for i in params]
   # print(string, variables, params)
 
   qc = circuit_from_qasm(string)
-  qc2 = map_operations(qc, map_func)
+  qc2 = c.map_operations(qc, map_func)
 
   return qc2
