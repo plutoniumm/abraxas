@@ -1,4 +1,3 @@
-from typing import cast
 from re import compile, findall
 import numpy as np
 
@@ -163,3 +162,67 @@ def toCirq(string):
   qc2 = c.map_operations(qc, map_func)
 
   return qc2
+
+def toCudaq(string):
+  from qiskit.transpiler.passes import RemoveBarriers
+  from qiskit.circuit import Parameter
+  from qiskit import QuantumCircuit
+  from cudaq import make_kernel
+
+  string, variables, params = parseVars(string)
+  variables = [Parameter(p) for p in variables]
+
+  qc = QuantumCircuit.from_qasm_str(string)
+  print(string)
+  print(qc)
+  qc = RemoveBarriers()(qc)
+
+  if len(params) > 0:
+    kernel, thetas = make_kernel(list)
+  else:
+      kernel = make_kernel()
+  cuq = kernel.qalloc(len(qc.qubits))
+
+  def u(self, a, b, c, u):
+    kernel.rz(b, u)
+    kernel.ry(a, u)
+    kernel.rz(c, u)
+
+  kernel.u = u
+  kernel.p = kernel.r1
+  gate_map = {
+    "phase": "p", "swap": "swap","measure": "mz"
+  }
+  legal_gates = [
+    'x', 'y', 'z', 'phase',
+    'rx', 'ry', 'rz', 'cx', 'cz', 'cy',
+    'u', 's', 't', 'h', 'swap', 'measure'
+  ]
+  # just loop over the gates and apply them
+
+  for instr, qubits, _ in qc.data:
+    if instr.name not in legal_gates:
+      raise ValueError(f"Gate {instr.name} not supported")
+    name = instr.name
+    arguments = instr.params
+    if name in gate_map:
+      name = gate_map[name]
+
+    op = getattr(kernel, name)
+    qubits = [q._index for q in qubits]
+    qubits = [cuq[q] for q in qubits]
+    if len(arguments) > 0:
+      # arguments need to be mapped to thetas if theyre in params
+      new_args = []
+      for arg in arguments:
+        if arg in params:
+          idx = params.index(arg)
+          arg = thetas[idx]
+        new_args.append(arg)
+
+      arguments = new_args
+      op(*new_args, *qubits)
+    else:
+      op(*qubits)
+
+  return kernel

@@ -1,2 +1,2 @@
-from .compiler import toCirq, toQiskit, toTket, toPenny
+from .compiler import toCirq, toQiskit, toTket, toPenny, toCudaq
 from .parser import toQasm

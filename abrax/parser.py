@@ -165,6 +165,15 @@ def toQasm(qc):
   elif name == 'Program': # Quil
     qasmd, names = compile_quil(qc.out())
     params = autoParam(len(names))
+  elif name == 'PyKernel': # CudaQ
+    if hasattr(qc, 'arguments'):
+      args = qc.arguments
+      if len(args) > 0:
+        raise ValueError('Arguments not supported yet.')
+
+    from cudaq import translate
+    params = []
+    qasmd = translate(qc, format="openqasm2")
   else:
     raise ValueError(f'Unsupported circuit: {name}')
 

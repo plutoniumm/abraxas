@@ -6,7 +6,7 @@ import pennylane as qml
 import cirq as cirq
 import qiskit as qk
 
-from compiler import toCirq, toQiskit, toTket, toPenny
+from compiler import toCirq, toQiskit, toTket, toPenny, toCudaq
 from parser import toQasm
 
 dev = qml.device("default.qubit", wires=2)
@@ -75,11 +75,25 @@ if PARSE:
 
     return circ
 
+  def bell_cudaq():
+    kernel = make_kernel()
+    q = kernel.qalloc(q)
+
+    kernel.h(q[0])
+    kernel.cx(q[0], q[1])
+    kernel.rx(0.1*0, q[0])
+    kernel.rx(0.1*1, q[1])
+
+    kernel.mz(q[0])
+    kernel.mz(q[1])
+
+    return kernel
   # print(toQasm(bell_penny))
   # print(toQasm(bell_quan()))
   # print(toQasm(bell_ibm()))
   # print(toQasm(bell_cirq()))
   # print(toQasm(bell_quil()))
+  # print(toQasm(bell_cudaq()))
 
 
 QASM="""
@@ -96,6 +110,8 @@ ry(var_theta2) q[1];
 """.strip()
 
 # print(toQiskit(QASM))
-# print(toPenny(QASM, dev))
+print(qml.draw(toPenny(QASM, dev))())
+
 # print(toCirq(QASM))
 # print(toTket(QASM))
+# print(toCudaq(QASM))
