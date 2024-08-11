@@ -7,6 +7,7 @@ build:
 
 deploy:
 	twine upload dist/* -u plutoniumm -p $(TOK)
+	rm -rf dist build abrax.egg-info
 
 test:
 	pip install .
