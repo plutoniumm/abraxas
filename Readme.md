@@ -12,6 +12,8 @@ A tiny library to transpile quantum circuits. The goal is to speed up the time i
 &bullet; [Quil](https://pyquil.readthedocs.io/en/stable/)
 
 ## Install
+While not explicity marked as required, it will be convenient to have `qiskit` installed since some functions use it to generate qasm code.
+
 ```py
 pip install abrax
 ```

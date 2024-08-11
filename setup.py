@@ -5,17 +5,17 @@ with open('Readme.md', 'r') as fh:
 
 setup(
   name='abrax',
-  version='0.1.0',
-  description='Finding Entanglement Rank',
+  version='0.5.0',
+  description='Cross platform circuit transpiler',
   long_description=long_description,
   long_description_content_type='text/markdown',
   author='plutoniumm',
-  url='https://github.com/plutoniumm/ranken',
+  url='https://github.com/plutoniumm/abraxas',
   license='MIT',
   package_dir={'': '.'},
   packages=find_packages(where='.'),
   python_requires='>=3.9',
-  install_requires=[ 'numpy', 'scipy' ],
+  install_requires=[ 'numpy' ],
   extras_require={
     'dev': ['pytest', 'twine', 'wheel'],
   },

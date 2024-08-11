@@ -1,4 +1,3 @@
-from qiskit.qasm2 import dumps
 import numpy as np
 import re
 
@@ -19,12 +18,14 @@ def compile_penny(qc, params):
   return t
 
 def compile_qiskit(qc, params):
+  from qiskit.qasm2 import dumps
   qc = qc.assign_parameters(params)
   t = dumps(qc).strip()
 
   return t
 
 def compile_tket(qc, params):
+  from qiskit.qasm2 import dumps
   from pytket.extensions.qiskit import tk_to_qiskit
   params = params / np.pi
   qc.symbol_substitution(
