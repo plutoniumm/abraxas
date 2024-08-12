@@ -1,6 +1,7 @@
 def draw(qc, **kwargs):
   name = qc.__class__.__name__
   base = qc.__class__.__base__.__name__
+  mod = qc.__module__.split('.')[0]
 
   if name == 'QuantumCircuit': # Qiskit
     print(qc.draw(**kwargs))
@@ -15,7 +16,8 @@ def draw(qc, **kwargs):
     import pyquil.latex
     res = pyquil.latex.to_latex(qc, **kwargs)
     print(res)
-
+  elif mod == 'bracket':
+    print(qc)
   elif name == 'PyKernel': # CudaQ
     from cudaq import draw
     print(draw(qc, **kwargs))

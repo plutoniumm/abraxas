@@ -134,6 +134,7 @@ def autoParam(int):
 def toQasm(qc):
   name = qc.__class__.__name__
   base = qc.__class__.__base__.__name__
+  mod = qc.__module__.split('.')[0]
   params = [0]
   qasmd = None
 
@@ -162,6 +163,12 @@ def toQasm(qc):
     names = list(qc._parameter_names_())
     params = autoParam(len(names))
     qasmd = compile_cirq(qc, params=params)
+
+  elif mod == 'bracket':
+    from braket.circuits.serialization import IRType
+    names = []
+    params = []
+    qasmd = qc.to_ir(IRType.OPENQASM).source
 
   elif name == 'Program': # Quil
     qasmd, names = compile_quil(qc.out())

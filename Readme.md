@@ -10,6 +10,7 @@ A tiny library to transpile quantum circuits. The goal is to speed up the time i
 &bullet; [Cirq](https://quantumai.google/cirq)
 &bullet; [TKet](https://tket.quantinuum.com/)
 &bullet; [Quil](https://pyquil.readthedocs.io/en/stable/)
+&bullet; [Braket](https://aws.amazon.com/braket/)
 
 ## Install
 While not explicity marked as required, it will be convenient to have `qiskit` installed since some functions use it to generate qasm code.
@@ -56,6 +57,7 @@ graph LR
   D0[TKet] --> Circuit
   E0[Quil] --> Circuit
   F0["CudaQ (half)"] --> Circuit
+  G0[Braket] --> Circuit
 
   Circuit --> A1[Qiskit]
   Circuit --> B1[Pennylane]
@@ -63,6 +65,7 @@ graph LR
   Circuit --> D1[TKet]
   Circuit --> E1[Quil]
   Circuit --> F1[CudaQ]
+  Circuit --> G1[Braket]
 ```
 
 ## Known Issues
@@ -71,9 +74,9 @@ graph LR
 - CudaQ cannot do variational gates "toQasm" and writing a parser for QIR/MLIR is extremely expensive
 
 ## Supported Frameworks
-<img src="./docs/assets/criq.jpg" width="150" />
-<img src="./docs/assets/tket.jpg" width="150" />
-<img src="./docs/assets/penny.jpg" width="150" />
-<img src="./docs/assets/qiskit.jpg" width="150" />
-<img src="./docs/assets/cudaq.jpg" width="150" />
-<img src="./docs/assets/rigetti.jpg" width="150" />
+
+| | | |
+|:-------------------------:|:-------------------------:|:-------------------------:|
+|<img src="./docs/assets/cirq.jpg" width="150" />|<img src="./docs/assets/tket.jpg" width="150" />|<img src="./docs/assets/penny.jpg" width="150" />|
+|<img src="./docs/assets/qiskit.jpg" width="150" />|<img src="./docs/assets/cudaq.jpg" width="150" />|<img src="./docs/assets/rigetti.jpg" width="150" />|
+|<img src="./docs/assets/braket.jpg" width="150" />|||

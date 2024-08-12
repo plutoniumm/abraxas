@@ -276,3 +276,8 @@ def toQuil(string):
       p += op(*qubits)
 
   return p
+
+def toBracket(string):
+  from braket.circuits import Circuit
+  # EASY OF THE CENTURY
+  return Circuit.from_ir(string)
