@@ -19,7 +19,7 @@ pip install abrax
 ```
 
 ## Examples
-### toQiskit
+### toPennylane
 ```python
 from qiskit import QuantumCircuit, Parameter
 from abrax import toPenny, toQasm
@@ -61,6 +61,7 @@ graph LR
   Circuit --> B1[Pennylane]
   Circuit --> C1[Cirq]
   Circuit --> D1[TKet]
+  Circuit --> E1[Quil]
   Circuit --> F1[CudaQ]
 ```
 

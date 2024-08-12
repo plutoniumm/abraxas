@@ -226,3 +226,53 @@ def toCudaq(string):
       op(*qubits)
 
   return kernel
+
+def toQuil(string):
+  from qiskit.transpiler.passes import RemoveBarriers
+  from qiskit.circuit import QuantumCircuit
+  from pyquil import Program
+  import pyquil.gates as G
+
+  string, variables, params = parseVars(string)
+  qc = QuantumCircuit.from_qasm_str(string)
+  qc = RemoveBarriers()(qc)
+
+  # same as cudaq we need to manually generate the program
+  legal_gates = [
+    'I', 'X', 'Y', 'Z', 'H', 'PHASE', 'S', 'T',
+    'CZ', 'RX', 'RY', 'RZ', 'CX', 'CCX',
+    'SWAP', 'CSWAP', 'ISWAP', 'PSWAP',
+  ]
+  gate_map = {
+    "CX": "CNOT", "CCX": "CCNOT"
+  }
+
+  # variables are declared as
+  # theta1 = p.declare("theta1", "REAL")
+
+  p = Program()
+  for instr, qubits, _ in qc.data:
+    name = instr.name.upper()
+    if name not in legal_gates:
+      raise ValueError(f"Gate {name} not supported")
+    arguments = instr.params
+    if name in gate_map:
+      name = gate_map[name]
+
+    op = getattr(G, name)
+    qubits = [q._index for q in qubits]
+    if len(arguments) > 0:
+      new_args = []
+      for arg in arguments:
+        if arg in params:
+          idx = params.index(arg)
+          arg = variables[idx]
+          arg = p.declare(str(arg), "REAL")
+        new_args.append(arg)
+
+      arguments = new_args
+      p += op(*new_args, *qubits)
+    else:
+      p += op(*qubits)
+
+  return p

@@ -6,7 +6,7 @@ import pennylane as qml
 import cirq as cirq
 import qiskit as qk
 
-from compiler import toCirq, toQiskit, toTket, toPenny, toCudaq
+from compiler import toCirq, toQiskit, toTket, toPenny, toCudaq, toQuil
 from parser import toQasm
 
 dev = qml.device("default.qubit", wires=2)
@@ -110,8 +110,11 @@ ry(var_theta2) q[1];
 """.strip()
 
 # print(toQiskit(QASM))
-print(qml.draw(toPenny(QASM, dev))())
-
+# print(toPenny(QASM, dev))
 # print(toCirq(QASM))
 # print(toTket(QASM))
 # print(toCudaq(QASM))
+# print(toQuil(QASM))
+import pyquil.latex
+res = pyquil.latex.to_latex(toQuil(QASM))
+print(res)
