@@ -5,7 +5,7 @@ with open('Readme.md', 'r') as fh:
 
 setup(
   name='abrax',
-  version='0.5.0',
+  version='1.0.0',
   description='Cross platform circuit transpiler',
   long_description=long_description,
   long_description_content_type='text/markdown',

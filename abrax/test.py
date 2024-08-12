@@ -115,6 +115,3 @@ ry(var_theta2) q[1];
 # print(toTket(QASM))
 # print(toCudaq(QASM))
 # print(toQuil(QASM))
-import pyquil.latex
-res = pyquil.latex.to_latex(toQuil(QASM))
-print(res)
