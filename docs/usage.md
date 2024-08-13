@@ -1,6 +1,6 @@
 ## Usage
 ### toPennylane
-```python
+```py
 from qiskit import QuantumCircuit, Parameter
 from abrax import toPenny, toQasm
 import pennylane as qml
@@ -27,4 +27,10 @@ See [`test.py`](https://github.com/plutoniumm/abraxas/blob/main/abrax/test.py) f
 
 Supported exports:
 - `toQasm`
-- `toPenny`, `toQiskit`, `toCirq`, `toBraket`, `toQiskit`, `toCudaQ`, `toQuil`
+- `toPenny`: For pennylane. You need to provide a device as well (`toPenny(qasm, dev)`).
+- `toQiskit`: For IBM qiskit
+- `toCirq`: For Google cirq
+- `toBraket`: For Amazon Braket
+- `toCudaQ`: For Nvidia Cuda-Quantum. For variational circuits it will return both kernel and thetas (`kernel, thetas = toCudaQ(qasm)`).
+- `toQuil`: For Rigetti Forest
+- `toTket`: For Quantinuum's TKet
