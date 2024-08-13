@@ -68,11 +68,6 @@ graph LR
   Circuit --> G1[Braket]
 ```
 
-## Known Issues
-- Don't parameterise 'exponent' in cirq for variational circuits. Else it will hard code in some random value. As a slow hack you can run the transpiler in a for loop everytime the exponent/rads change.
-- Compiling "TO" pyquil isn't supported yet, I don't want to write a full generator loop
-- CudaQ cannot do variational gates "toQasm" and writing a parser for QIR/MLIR is extremely expensive
-
 ## Supported Frameworks
 
 | | | |

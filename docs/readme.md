@@ -1,6 +1,8 @@
 ## <img src="./assets/favicon.svg" style="height:1em;position:relative;top:0.2em;" /> abraxas
 A tiny library to transpile quantum circuits. The goal is to speed up the time it takes to convert simple circuits across languages fast. Anything beyond a certain complexity should be written in the respective languages directly.
 
+[![PyPI version](https://badge.fury.io/py/abrax.svg)](https://badge.fury.io/py/abrax)
+
 [Qiskit](https://qiskit.org/)
 &bullet; [CudaQ](https://nvidia.github.io/cuda-quantum/latest/install.html)
 &bullet; [Pennylane](https://docs.pennylane.ai/en/stable/code/qml.html)
