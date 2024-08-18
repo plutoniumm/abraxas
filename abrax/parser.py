@@ -138,12 +138,8 @@ def toQasm(qc):
   params = [0]
   qasmd = None
 
-  if name == 'QuantumCircuit': # Qiskit
-    names = [i.name for i in qc.parameters]
-    params = autoParam(len(names))
-    qasmd = compile_qiskit(qc, params=params)
 
-  elif name == 'QNode': # PennyLane
+  if name == 'QNode': # PennyLane
     qc2 = qc
     names = Unlist()
     qc2(names)
@@ -159,16 +155,22 @@ def toQasm(qc):
     params = autoParam(len(names))
     qasmd = compile_tket(qc, params=params)
 
+  elif mod == 'braket':
+    from qiskit_braket_provider.providers.adapter import to_qiskit
+    qc = to_qiskit(qc)
+    names = [i.name for i in qc.parameters]
+    params = autoParam(len(names))
+    qasmd = compile_qiskit(qc, params=params)
+
+  elif name == 'QuantumCircuit': # Qiskit
+    names = [i.name for i in qc.parameters]
+    params = autoParam(len(names))
+    qasmd = compile_qiskit(qc, params=params)
+
   elif name == 'Circuit': # Cirq
     names = list(qc._parameter_names_())
     params = autoParam(len(names))
     qasmd = compile_cirq(qc, params=params)
-
-  elif mod == 'bracket':
-    from braket.circuits.serialization import IRType
-    names = []
-    params = []
-    qasmd = qc.to_ir(IRType.OPENQASM).source
 
   elif name == 'Program': # Quil
     qasmd, names = compile_quil(qc.out())
@@ -185,8 +187,8 @@ def toQasm(qc):
   else:
     raise ValueError(f'Unsupported circuit: {name}')
 
-  # replace all params back with var_i
   for i in range(len(params)):
+    names[i] = names[i].replace("[", "_").replace("]", "")
     qasmd = qasmd.replace(str(params[i]), f'var_{names[i]}')
 
   return qasmd

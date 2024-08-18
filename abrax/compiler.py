@@ -38,13 +38,14 @@ def toQiskit(string):
   variables = [Parameter(p) for p in variables]
 
   qc = QuantumCircuit.from_qasm_str(string)
+  # print(qc)
   class BackReplace(TransformationPass):
     def run(self, dag):
       for node in dag.op_nodes():
         cparams = node.op.params
         if len(cparams) == 0:
           continue
-        replacement = QuantumCircuit(len(cparams))
+        replacement = QuantumCircuit(node.op.num_qubits)
         op = node.op.copy()
         new_params = []
         for p in cparams:
@@ -55,7 +56,7 @@ def toQiskit(string):
             new_params.append(p)
 
         op.params = new_params
-        replacement.append(op, [0])
+        replacement.append(op, list(range(node.op.num_qubits)))
 
         dag.substitute_node_with_dag(node, circuit_to_dag(replacement))
       return dag
@@ -277,7 +278,8 @@ def toQuil(string):
 
   return p
 
-def toBracket(string):
-  from braket.circuits import Circuit
-  # EASY OF THE CENTURY
-  return Circuit.from_ir(string)
+def toBraket(string):
+  from qiskit_braket_provider.providers.adapter import to_braket
+  qc = toQiskit(string)
+
+  return to_braket(qc)

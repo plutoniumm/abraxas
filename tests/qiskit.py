@@ -11,3 +11,15 @@ def bell_ibm():
   qc.measure_all()
 
   return qc
+
+def h2_vqe():
+  from qiskit.circuit.library import ExcitationPreserving
+  from qiskit.circuit import Parameter, QuantumCircuit
+
+  qc = QuantumCircuit(4)
+  qc.x([0, 2])
+  ep = ExcitationPreserving(4, 'iswap', 'linear', 2)
+  qc.compose(ep, inplace=True)
+  qc = qc.decompose()
+
+  return qc
