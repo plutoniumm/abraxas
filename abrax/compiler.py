@@ -38,7 +38,6 @@ def toQiskit(string):
   variables = [Parameter(p) for p in variables]
 
   qc = QuantumCircuit.from_qasm_str(string)
-  # print(qc)
   class BackReplace(TransformationPass):
     def run(self, dag):
       for node in dag.op_nodes():
@@ -99,15 +98,6 @@ def toPenny(string, device):
   circuit=qml.QNode(circuit, device)
   return circuit
 
-"""START OF TKET"""
-def printket(circ):
-  from pytket.circuit.display import get_circuit_renderer
-  CR = get_circuit_renderer()
-  CR.set_render_options(zx_style=True)
-  CR.condense_c_bits = False
-  CR.min_height = "300px"
-  print(CR.render_circuit_as_html(circ))
-
 def unstring(pars):
   pars = [i.replace('/pi', '') for i in pars]
   pars = [i[1:-1] if i[0] == '(' else i for i in pars]
@@ -157,8 +147,6 @@ def toCirq(string):
     yield op
 
   params = [i/np.pi for i in params]
-  # print(string, variables, params)
-
   qc = circuit_from_qasm(string)
   qc2 = c.map_operations(qc, map_func)
 
@@ -174,8 +162,6 @@ def toCudaq(string):
   variables = [Parameter(p) for p in variables]
 
   qc = QuantumCircuit.from_qasm_str(string)
-  print(string)
-  print(qc)
   qc = RemoveBarriers()(qc)
 
   if len(params) > 0:

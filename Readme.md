@@ -13,7 +13,7 @@ A tiny library to transpile quantum circuits. The goal is to speed up the time i
 &bullet; [Braket](https://aws.amazon.com/braket/)
 
 ## Install
-While not explicity marked as required, it will be convenient to have `qiskit` installed since some functions use it to generate qasm code.
+Qiskit has also been marked as a dependency since about a third of the functions use it anyway.
 
 ```py
 pip install abrax
