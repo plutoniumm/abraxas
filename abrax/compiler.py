@@ -168,6 +168,7 @@ def toCudaq(string):
     kernel, thetas = make_kernel(list)
   else:
       kernel = make_kernel()
+      thetas = []
   cuq = kernel.qalloc(len(qc.qubits))
 
   def u(self, a, b, c, u):
@@ -212,9 +213,9 @@ def toCudaq(string):
     else:
       op(*qubits)
 
-  return kernel
+  return kernel, qubits, thetas
 
-def toQuil(string):
+def toPyquil(string):
   from qiskit.transpiler.passes import RemoveBarriers
   from qiskit.circuit import QuantumCircuit
   from pyquil import Program

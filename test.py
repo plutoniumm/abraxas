@@ -1,5 +1,5 @@
-from abrax.compiler import toBraket, toCirq, toCudaq, toQiskit, toPenny, toQuil, toTket
-from abrax.parser import toQasm
+from abrax.compiler import toBraket, toCirq, toCudaq, toQiskit, toPenny, toPyquil, toTket
+from abrax import toQasm, toQuil, toQir, toQasm3
 from abrax.utils import draw
 
 from tests.braket import bell_bracket, Bracket, FreeParameter
@@ -24,7 +24,7 @@ from tests.utils import QASM
 # print(toCirq(QASM))
 # print(toTket(QASM))
 # print(toBraket(QASM))
-# print(toCudaq(QASM))
+# print(toCudaq(QASM)[0])
 # print(toQuil(QASM))
 
 vqe_qasm = toQasm(h2_vqe())
